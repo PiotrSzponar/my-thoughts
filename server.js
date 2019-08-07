@@ -6,10 +6,7 @@ dotenv.config({ path: './config/dev.env' });
 process.on('uncaughtException', err => {
   console.log('UNCAUGHT EXCEPTION! Shutting down...');
   console.log(`${err.name}: ${err.message}`);
-  // eslint-disable-next-line no-use-before-define
-  server.close(() => {
-    process.exit(1);
-  });
+  process.exit(1);
 });
 
 const app = require('./app');
