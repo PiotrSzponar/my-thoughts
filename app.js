@@ -4,6 +4,8 @@ const morgan = require('morgan');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
+const userRouter = require('./routes/userRoutes');
+
 const app = express();
 
 // MIDDLEWARES
@@ -23,6 +25,7 @@ app.use((req, res, next) => {
 });
 
 // ROUTES
+app.use('/api/users', userRouter);
 
 // 404 - Not Found
 app.all('*', (req, res, next) => {
