@@ -47,7 +47,13 @@ module.exports = class Email {
     };
 
     // 2) Create a transport and send email
-    await this.newTransport().sendMail(mailOptions);
+    await this.newTransport().sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(info);
+      }
+    });
   }
 
   async sendVerification() {
