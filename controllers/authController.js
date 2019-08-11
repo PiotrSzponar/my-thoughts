@@ -64,3 +64,25 @@ exports.verification = catchAsync(async (req, res, next) => {
     message: 'User confirmed'
   });
 });
+
+exports.signin = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    next(new AppError('Please provide email and password', 400));
+  }
+
+  const user = await User.findOne({ email }).select('+password');
+
+  // check if user exists or password is correct
+  if (!user || !(await user.correctPassword(password, user.password))) {
+    return next(new AppError('Incorrect email or password', 401));
+  }
+
+  const token = signToken(user._id, process.env.JWT_LOGIN_EXPIRES_IN);
+
+  res.status(200).json({
+    status: 'success',
+    token
+  });
+});
