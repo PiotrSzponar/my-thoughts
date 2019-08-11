@@ -78,7 +78,9 @@ exports.signin = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
-
+  if (!user.isVerified) {
+    return next(new AppError('User is not verified', 400));
+  }
   const token = signToken(user._id, process.env.JWT_LOGIN_EXPIRES_IN);
 
   res.status(200).json({
