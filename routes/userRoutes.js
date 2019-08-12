@@ -10,12 +10,12 @@ router.patch('/verification/:token', authController.verification);
 
 router
   .route('/')
-  .get(userController.getAllUsers)
+  .get(authController.restrictTo('admin'), userController.getAllUsers)
   .post(userController.createUser);
 
 router
   .route('/:id')
-  .get(userController.getUser)
+  .get(authController.protect, userController.getUser)
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
 
