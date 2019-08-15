@@ -30,7 +30,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   const verificationURL = `${req.protocol}://${req.get(
     'host'
-  )}/api/users/verification/${verificationToken}`;
+  )}/verification?email=${newUser.email}&token=${verificationToken}`;
 
   await new Email(newUser, verificationURL).sendVerification();
 
@@ -46,7 +46,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
 exports.verification = catchAsync(async (req, res, next) => {
   // 1) Get user based on the token
-  const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+  const decoded = jwt.verify(req.query.token, process.env.JWT_SECRET);
   const user = await User.findById(decoded.id);
 
   // 2) If token has not expired, and there is user, confirm verification
@@ -65,7 +65,34 @@ exports.verification = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.signin = catchAsync(async (req, res, next) => {
+exports.resendVerification = catchAsync(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError('There is no user with email address.', 404));
+  }
+  if (user.isVerified) {
+    return next(new AppError('This user has already been verified', 400));
+  }
+
+  const verificationToken = signToken(
+    user._id,
+    process.env.JWT_VERIFICATION_EXPIRES_IN
+  );
+
+  const verificationURL = `${req.protocol}://${req.get(
+    'host'
+  )}/verification?email=${user.email}&token=${verificationToken}`;
+
+  await new Email(user, verificationURL).sendVerification();
+
+  res.status(200).json({
+    status: 'success',
+    message:
+      'Email verification has been resend. You have another 12h to confirm your email address.'
+  });
+});
+
+exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
