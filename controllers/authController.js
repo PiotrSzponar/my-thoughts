@@ -5,8 +5,35 @@ const Email = require('../utils/email');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
-const signToken = (id, expiresTime) => {
+const signToken = (id, expiresTime = process.env.JWT_LOGIN_EXPIRES_IN) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: expiresTime });
+};
+
+const createTokenCookie = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true
+  };
+
+  // If production is https:
+  // if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+  res.cookie('jwt', token, cookieOptions);
+
+  // Remove password and isVerified from output
+  user.password = undefined;
+  user.isVerified = undefined;
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user
+    }
+  });
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
@@ -33,6 +60,8 @@ exports.signup = catchAsync(async (req, res, next) => {
   )}/verification?email=${newUser.email}&token=${verificationToken}`;
 
   await new Email(newUser, verificationURL).sendVerification();
+
+  newUser.password = undefined;
 
   res.status(201).json({
     status: 'success',
@@ -99,7 +128,7 @@ exports.login = catchAsync(async (req, res, next) => {
     next(new AppError('Please provide email and password', 400));
   }
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password +isVerified');
 
   // check if user exists or password is correct
   if (!user || !(await user.correctPassword(password, user.password))) {
@@ -108,12 +137,8 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user.isVerified) {
     return next(new AppError('User is not verified', 400));
   }
-  const token = signToken(user._id, process.env.JWT_LOGIN_EXPIRES_IN);
 
-  res.status(200).json({
-    status: 'success',
-    token
-  });
+  createTokenCookie(user, 200, res);
 });
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
@@ -158,8 +183,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordChangedAt = Date.now() - 1000;
   await user.save();
 
-  res.status(200).json({
-    status: 'success',
-    message: 'User password changed.'
-  });
+  // Log the user in, send JWT
+  createTokenCookie(user, 200, res);
 });
