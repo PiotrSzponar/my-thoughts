@@ -40,15 +40,24 @@ const userSchema = new mongoose.Schema({
       true,
       'Name is required. It can be your real name or a nick name.'
     ],
-    trim: true
+    trim: true,
+    maxlength: [30, 'Name can have less than 30 characters.']
   },
   gender: {
     type: String,
+    enum: {
+      values: ['female', 'male', 'other'],
+      message: 'Please provide a valid gender.'
+    },
     required: [true, 'Gender is required.']
   },
   birthDate: {
-    type: Date,
-    required: [true, 'Birth date is required.']
+    type: String,
+    required: [true, 'Birth date is required.'],
+    validate: [
+      validator.isBefore,
+      'Please provide a valid birth date (should be in the past).'
+    ]
   },
   photo: {
     type: String
@@ -65,8 +74,10 @@ const userSchema = new mongoose.Schema({
   },
   isVerified: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+    select: false
+  },
+  passwordChangedAt: Date
 });
 
 userSchema.pre('save', async function(next) {
