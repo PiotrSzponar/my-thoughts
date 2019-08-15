@@ -42,11 +42,13 @@ app.use(xssClean());
 
 // Prevent parameter pollution
 // TODO: Add parameters that could be doubled in query search
-app.use(hpp({
-  whitelist: [
-    // 'example'
-  ]
-}));
+app.use(
+  hpp({
+    whitelist: [
+      // 'example'
+    ]
+  })
+);
 
 // ROUTES
 app.use('/api/users', userRouter);
