@@ -46,7 +46,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
 exports.verification = catchAsync(async (req, res, next) => {
   // 1) Get user based on the token
-  const decoded = jwt.verify(req.query.token, process.env.JWT_SECRET);
+  const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
   const user = await User.findById(decoded.id);
 
   // 2) If token has not expired, and there is user, confirm verification
@@ -113,5 +113,53 @@ exports.login = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     token
+  });
+});
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // Get user based on POST email
+  const user = await User.findOne({ email: req.body.email }).select(
+    '+isVerified'
+  );
+  if (user) {
+    if (!user.isVerified) {
+      return next(new AppError('User is not verified', 400));
+    }
+    // Generate token
+    const resetToken = signToken(user._id, process.env.JWT_RESET_EXPIRES_IN);
+
+    const resetURL = `${req.protocol}://${req.get(
+      'host'
+    )}/api/users/reset-password/${resetToken}`;
+
+    // Send it to the user's email
+    await new Email(user, resetURL).sendResetPassword();
+  }
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Message with the next steps has been send to the provided email.'
+  });
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // Get user based on the token
+  const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+  const user = await User.findById(decoded.id);
+
+  // If token has not expired, and there is user, change the password
+  if (!user) {
+    return next(new AppError('Token is invalid or has expired', 400));
+  }
+  // Change password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  // Save the date of password change
+  user.passwordChangedAt = Date.now() - 1000;
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'User password changed.'
   });
 });

@@ -47,13 +47,7 @@ module.exports = class Email {
     };
 
     // 2) Create a transport and send email
-    await this.newTransport().sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(info);
-      }
-    });
+    await this.newTransport().sendMail(mailOptions);
   }
 
   async sendVerification() {
@@ -65,6 +59,23 @@ module.exports = class Email {
       <h3>Welcome ${this.name}! We're glad you're with us.</h3>
       <p>Please verify Your Email Address by clicking the link below.</p>
       <p><a href="${this.url}">Confirm Your Email Address</a></p>
+      <br>
+      <hr>
+      <p>If you didn't request this, please ignore this email.</p>
+      </center>
+      `
+    );
+  }
+
+  async sendResetPassword() {
+    await this.send(
+      'Reset password of My Thoughts account.',
+      `
+      <center>
+      <h1>.::My Thoughts::.</h1>
+      <h3>Welcome ${this.name}! Have you forgotten your password?</h3>
+      <p>Please go to the page below and use reset password form.</p>
+      <p><a href="${this.url}">Reset your password!</a></p>
       <br>
       <hr>
       <p>If you didn't request this, please ignore this email.</p>
