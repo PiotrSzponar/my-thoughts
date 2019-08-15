@@ -5,8 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon server.js",
-    "start:prod": "cross-env NODE_ENV=production nodemon server.js",
-    "debug": "ndb server.js"
+    "start:prod": "cross-env NODE_ENV=production nodemon server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -29,7 +28,6 @@
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-prettier": "^3.1.0",
     "eslint-plugin-react": "^7.14.3",
-    "ndb": "^1.1.4",
     "nodemon": "^1.19.1",
     "prettier": "^1.18.2"
   },
