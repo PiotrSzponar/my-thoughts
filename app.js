@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xssClean = require('xss-clean');
+const hpp = require('hpp');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -38,6 +39,14 @@ app.use(mongoSanitize());
 
 // Data sanitization against XSS
 app.use(xssClean());
+
+// Prevent parameter pollution
+// TODO: Add parameters that could be doubled in query search
+app.use(hpp({
+  whitelist: [
+    // 'example'
+  ]
+}));
 
 // ROUTES
 app.use('/api/users', userRouter);
