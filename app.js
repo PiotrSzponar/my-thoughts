@@ -11,7 +11,11 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const userRouter = require('./routes/userRoutes');
 
+const passport = require('passport');
+const passportSetup = require('./controllers/passport-setup');
+
 const app = express();
+app.use(passport.initialize());
 
 // GLOBAL MIDDLEWARES
 

@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide a password.'],
     validate: {
-      validator: function(el) {
+      validator: function (el) {
         return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(el);
       },
       message:
@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please confirm your password'],
     validate: {
       // This only works on CREATE and SAVE!!!
-      validator: function(el) {
+      validator: function (el) {
         return el === this.password;
       },
       message: 'Passwords are not the same!'
@@ -80,7 +80,7 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date
 });
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   // only run this fn if password was actually modified
   if (!this.isModified('password')) return next();
 
@@ -92,13 +92,21 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-userSchema.methods.correctPassword = async function(
+userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-const User = mongoose.model('User', userSchema);
+const userGSchema = new mongoose.Schema({
+  username: String,
+  googleId: String
+})
 
-module.exports = User;
+
+const User = mongoose.model('User', userSchema);
+const UserG = mongoose.model('UserG', userGSchema);
+
+
+module.exports = { User, UserG };
