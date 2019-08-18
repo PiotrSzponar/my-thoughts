@@ -22,14 +22,13 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false
   })
+  .then(seed)
   .then(() => console.log('DB connection ok!'));
 
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () =>
-  seed(() => {
-    console.log(`App running on port ${port}...`);
-  })
-);
+const server = app.listen(port, () => {
+  console.log(`App running on port ${port}...`);
+});
 
 process.on('unhandledRejection', err => {
   console.log('UNHANDLED REJECTION! Shutting down...');

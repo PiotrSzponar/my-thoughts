@@ -1,4 +1,3 @@
-// const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/userModel');
@@ -48,7 +47,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     photo: req.body.photo,
     bio: req.body.bio,
     country: req.body.country,
-    city: req.body.city
+    city: req.body.city,
+    role: req.body.role
   });
 
   const verificationToken = signToken(
@@ -186,23 +186,6 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   // Log the user in, send JWT
   createTokenCookie(user, 200, res);
-});
-
-exports.protect = catchAsync(async (req, res, next) => {
-  let token;
-
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    token = req.headers.authorization;
-  }
-
-  if (!token) {
-    return next(new AppError('You are not logged in! Please log in', 401));
-  }
-
-  // const decoded = promisify(jwt.verify(token, process.env.JWT_SECRET));
 });
 
 exports.restrictTo = (...roles) => {

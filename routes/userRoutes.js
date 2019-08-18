@@ -8,16 +8,7 @@ router.post('/signup', authController.signup);
 router.patch('/verification/:token', authController.verification);
 router.post('/resend-verification', authController.resendVerification);
 
-router
-  .route('/')
-  .get(authController.restrictTo('admin'), authController.getAllUsers)
-  .post(authController.createUser);
-
-router
-  .route('/:id')
-  .get(authController.protect, authController.getUser)
-  .patch(authController.updateUser)
-  .delete(authController.deleteUser);
+router.route('/');
 
 router.post('/login', authController.login);
 

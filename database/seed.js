@@ -11,32 +11,26 @@ const seed = {
   photo: 'photo.jpg',
   bio: 'description',
   country: 'poland',
-  city: 'gliwice'
+  city: 'gliwice',
+  isVerified: true
 };
 
-exports.module = cb => {
-  const user = User.findOne({ email: seed.email });
-
+module.exports = async () => {
+  const user = await User.findOne({ email: seed.email, role: seed.role });
   if (!user) {
-    User.create(
-      {
-        role: seed.role,
-        email: seed.email,
-        password: seed.password,
-        passwordConfirm: seed.passwordConfirm,
-        name: seed.name,
-        gender: seed.gender,
-        birthDate: seed.birthDate,
-        photo: seed.photo,
-        bio: seed.bio,
-        country: seed.country,
-        city: seed.city
-      },
-      {
-        validateBeforeSave: false
-      }
-    );
+    User.create({
+      role: seed.role,
+      email: seed.email,
+      password: seed.password,
+      passwordConfirm: seed.passwordConfirm,
+      name: seed.name,
+      gender: seed.gender,
+      birthDate: seed.birthDate,
+      photo: seed.photo,
+      bio: seed.bio,
+      country: seed.country,
+      city: seed.city,
+      isVerified: seed.isVerified
+    });
   }
-
-  return cb();
 };
