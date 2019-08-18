@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const seed = require('./database/seed');
 
 dotenv.config({ path: './config/dev.env' });
 
@@ -24,9 +25,11 @@ mongoose
   .then(() => console.log('DB connection ok!'));
 
 const port = process.env.PORT || 3000;
-const server = app.listen(port, () => {
-  console.log(`App running on port ${port}...`);
-});
+const server = app.listen(port, () =>
+  seed(() => {
+    console.log(`App running on port ${port}...`);
+  })
+);
 
 process.on('unhandledRejection', err => {
   console.log('UNHANDLED REJECTION! Shutting down...');

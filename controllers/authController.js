@@ -104,8 +104,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     return next(new AppError('You are not logged in! Please log in', 401));
   }
 
-  const decoded = promisify(jwt.verify(token, process.env.JWT_SECRET));
-
+  // const decoded = promisify(jwt.verify(token, process.env.JWT_SECRET));
 });
 
 exports.restrictTo = (...roles) => {
