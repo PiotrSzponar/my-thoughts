@@ -1,5 +1,6 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2');
+const FacebookStrategy = require('passport-facebook');
 const dotenv = require('dotenv');
 const UserG = require('../models/userModel').UserG;
 dotenv.config({ path: './config/dev.env' });
@@ -16,7 +17,7 @@ dotenv.config({ path: './config/dev.env' });
 //     });
 // })
 
-
+//Google
 passport.use(
     new GoogleStrategy({
         //options for the google start
@@ -43,3 +44,28 @@ passport.use(
             })
     })
 )
+//Facebook
+passport.use(new FacebookStrategy({
+    clientID: '2417213185014348',
+    clientSecret: '25a08ca59acf6547a4490adea0115732',
+    callbackURL: "/api/users/profileFb"
+},
+    function (accessToken, refreshToken, profileRaw, done) {
+        const profile = profileRaw._json;
+        UserG.findOne({ facebookId: profile.id })
+            .then((currentUser) => {
+                if (currentUser) {
+                    //already have the user 
+                    console.log("Current user ", currentUser);
+                    //send to serialize
+                    return done(null, currentUser);
+                } else {
+                    new UserG({ username: profile.name, facebookId: profile.id }).save().then((newUser) => {
+                        console.log('new user created', newUser);
+                        //send to serialize
+                        return done(null, newUser);
+                    });
+                }
+            });
+    }
+));

@@ -11,6 +11,7 @@ const router = express.Router();
 router.get('/google', passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
 router.get('/googleLogout', (req, res) => {
     res.redirect('https://accounts.google.com/logout');
+    //token reset 
 })
 //succcess
 router.get('/profile', passport.authenticate('google', { session: false, failureRedirect: '/google' }), function (req, res) {
@@ -27,6 +28,13 @@ router.get('/verify', authGoogleController.checkTokenMW, (req, res) => {
     }
 });
 //End of Google verification
+
+//Facebook Signup
+router.get('/facebook', passport.authenticate('facebook'));
+
+router.get('/profileFb', passport.authenticate('facebook', { session: false, failureRedirect: '/facebook' }), function (req, res) {
+    authGoogleController.signToken(req, res);
+})
 
 router.post('/signup', authController.signup);
 

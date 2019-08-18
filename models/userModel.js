@@ -100,8 +100,10 @@ userSchema.methods.correctPassword = async function (
 };
 
 const userGSchema = new mongoose.Schema({
-  username: String,
-  googleId: String
+  username: { type: String, required: [true, 'Username is required'] },
+  googleId: { default: null, type: String },
+  facebookId: { default: null, type: String }
+
 })
 
 
