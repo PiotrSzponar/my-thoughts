@@ -32,5 +32,8 @@
                 "argsIgnorePattern": "req|res|next|val"
             }
         ]
+    },
+    "parserOptions": {
+        "sourceType": "module"
     }
 }
