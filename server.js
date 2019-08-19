@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const initAdmin = require('./utils/initAdmin');
 
 dotenv.config({ path: './config/dev.env' });
 
@@ -21,6 +22,7 @@ mongoose
     useCreateIndex: true,
     useFindAndModify: false
   })
+  .then(initAdmin)
   .then(() => console.log('DB connection ok!'));
 
 const port = process.env.PORT || 3000;

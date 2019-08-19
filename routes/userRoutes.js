@@ -8,6 +8,8 @@ router.post('/signup', authController.signup);
 router.patch('/verification/:token', authController.verification);
 router.post('/resend-verification', authController.resendVerification);
 
+router.route('/');
+
 router.post('/login', authController.login);
 
 router.post('/forgot-password', authController.forgotPassword);
