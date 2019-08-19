@@ -47,8 +47,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     photo: req.body.photo,
     bio: req.body.bio,
     country: req.body.country,
-    city: req.body.city,
-    role: req.body.role
+    city: req.body.city
   });
 
   const verificationToken = signToken(
