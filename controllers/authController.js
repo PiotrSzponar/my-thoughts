@@ -149,6 +149,52 @@ exports.signin = catchAsync(async (req, res, next) => {
   createTokenCookie(user, 200, res);
 });
 
+// User sign out - clear JWT cookie
+exports.signout = (req, res) => {
+  res.clearCookie('jwt');
+  res.status(200).json({ status: 'success' });
+};
+
+// Protect routes - only signed in users can get access
+exports.protect = catchAsync(async (req, res, next) => {
+  // Getting token and check of it's there
+  let token;
+  if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+
+  if (!token) {
+    return next(
+      new AppError('You are not logged in! Please log in to get access.', 401)
+    );
+  }
+
+  // Verification token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  // Check if user still exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError(
+        'The user belonging to this token does no longer exist.',
+        401
+      )
+    );
+  }
+
+  // Check if user changed password after the token was issued
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password! Please log in again.', 401)
+    );
+  }
+
+  // Gain access
+  req.user = currentUser;
+  next();
+});
+
 // Forgot Password: provide email and send there reset-password link
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // Get user based on POST email
@@ -200,12 +246,12 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 // Check if user has required role
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
+    // array ['admin', 'moderator'] or string role='admin'
     if (!roles.includes(req.user.role)) {
       return next(
         new AppError('You do not have permission to perform this action', 403)
       );
     }
-
     next();
   };
 };
