@@ -239,8 +239,10 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordChangedAt = Date.now() - 1000;
   await user.save();
 
-  // Log the user in, send JWT
-  createTokenCookie(user, 200, res);
+  res.status(200).json({
+    status: 'success',
+    message: 'Password has been changed'
+  });
 });
 
 // Check if user has required role
