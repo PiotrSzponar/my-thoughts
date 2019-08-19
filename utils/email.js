@@ -8,6 +8,9 @@ module.exports = class Email {
     this.from = `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_EMAIL}>`;
   }
 
+  // Check env and choose how to handle emails
+  // DEV: Trapmail
+  // PROD: SendGrid
   newTransport() {
     if (process.env.NODE_ENV === 'production') {
       // Sendgrid
@@ -23,6 +26,7 @@ module.exports = class Email {
       });
     }
 
+    // Trapmail
     return nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: process.env.EMAIL_PORT,
@@ -50,6 +54,7 @@ module.exports = class Email {
     await this.newTransport().sendMail(mailOptions);
   }
 
+  // Email address verification message
   async sendVerification() {
     await this.send(
       'Welcome to My Thoughts! Confirm Your Email Address.',
@@ -67,6 +72,7 @@ module.exports = class Email {
     );
   }
 
+  // Reset password message
   async sendResetPassword() {
     await this.send(
       'Reset password of My Thoughts account.',

@@ -11,11 +11,6 @@ const userSchema = new mongoose.Schema({
     trim: true,
     validate: [validator.isEmail, 'Please provide a valid e-mail.']
   },
-  role: {
-    type: String,
-    enum: ['user', 'moderator', 'admin'],
-    default: 'user'
-  },
   password: {
     type: String,
     required: [true, 'Please provide a password.'],
@@ -32,12 +27,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please confirm your password'],
     validate: {
+      // Check if password and passwordConfirm are equal
       // This only works on CREATE and SAVE!!!
       validator: function(el) {
         return el === this.password;
       },
       message: 'Passwords are not the same!'
     }
+  },
+  role: {
+    type: String,
+    enum: ['user', 'moderator', 'admin'],
+    default: 'user'
   },
   name: {
     type: String,
@@ -85,6 +86,8 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date
 });
 
+// Before save user to DB check if password filed was changed
+// If was, hash password and remove passwordConfirm (we won't use it)
 userSchema.pre('save', async function(next) {
   // only run this fn if password was actually modified
   if (!this.isModified('password')) return next();
@@ -97,6 +100,7 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
+// Compare hashed passwords
 userSchema.methods.correctPassword = async function(
   candidatePassword,
   userPassword

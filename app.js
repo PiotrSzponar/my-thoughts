@@ -35,13 +35,15 @@ app.use('/api', limiter);
 app.use(express.json({ limit: '10kb' }));
 
 // Data sanitization against NoSQL query injection
+// e.g. login with invalid email { "$gt": ""} (always true) and valid password won't pass
 app.use(mongoSanitize());
 
 // Data sanitization against XSS
+// Convert HTML code from inputs to plain text (<div> to &alt;div>)
 app.use(xssClean());
 
-// Prevent parameter pollution
-// TODO: Add parameters that could be doubled in query search
+// TODO: Prevent parameter pollution
+// - Add parameters that could be doubled in query search
 app.use(
   hpp({
     whitelist: [

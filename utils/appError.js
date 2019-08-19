@@ -1,3 +1,4 @@
+// Make trusted errors that we wand to show to clients
 class AppError extends Error {
   constructor(message, statusCode) {
     // super(message);

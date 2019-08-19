@@ -10,7 +10,7 @@ router.post('/resend-verification', authController.resendVerification);
 
 router.route('/');
 
-router.post('/login', authController.login);
+router.post('/signin', authController.signin);
 
 router.post('/forgot-password', authController.forgotPassword);
 router.patch('/reset-password/:token', authController.resetPassword);
