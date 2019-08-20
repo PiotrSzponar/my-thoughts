@@ -10,19 +10,31 @@ exports.getLoginUser = (req, res) => {
 };
 
 exports.searchFriends = catchAsync(async (req, res, next) => {
-  // user must send term in params
-  const { term } = req.params;
+  const { q } = req.query;
+
+  if (!q) {
+    return next(new AppError('Search cannot be empty', 400));
+  }
+
   const users = await User.find({
     $or: [
       {
-        name: { $regex: `${term}`, $options: 'i' }
+        name: { $regex: `${q}`, $options: 'i' }
       },
       {
-        email: { $regex: `${term}`, $options: 'i' }
+        email: { $regex: `${q}`, $options: 'i' }
+      }
+    ],
+    $nor: [
+      {
+        _id: req.user._id
       }
     ],
     isHidden: false
   });
+
+  //Todo:
+  //add sorting, so friends are shown first
 
   if (!users.length) {
     return next(new AppError('No results', 404));
@@ -30,7 +42,8 @@ exports.searchFriends = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    message: 'data searched',
+    message: 'Data successfully searched',
+    results: users.length,
     data: {
       users
     }
