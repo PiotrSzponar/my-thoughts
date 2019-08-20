@@ -51,6 +51,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     bio: req.body.bio,
     country: req.body.country,
     city: req.body.city
+    // isHidden: false
   });
 
   const verificationToken = signToken(

@@ -12,7 +12,9 @@ module.exports = async () => {
       name: 'Administrator',
       gender: 'other',
       birthDate: new Date().toISOString().substring(0, 10),
-      isVerified: true
+      isVerified: true,
+      isHidden: true
     });
+    console.log('Admininistrator role created');
   }
 };
