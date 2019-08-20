@@ -85,8 +85,7 @@ const userSchema = new mongoose.Schema({
   },
   isHidden: {
     type: Boolean,
-    default: false,
-    select: false
+    default: false
   },
   passwordChangedAt: Date
 });

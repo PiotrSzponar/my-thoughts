@@ -15,6 +15,6 @@ module.exports = async () => {
       isVerified: true,
       isHidden: true
     });
-    console.log('Admininistrator role created');
+    console.log('Default Administrator has been created');
   }
 };

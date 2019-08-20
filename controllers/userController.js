@@ -24,12 +24,10 @@ exports.searchFriends = catchAsync(async (req, res, next) => {
     isHidden: false
   });
 
-  // console.log(typeof users, !users);
   if (!users.length) {
     return next(new AppError('No results', 404));
   }
 
-  // console.log(usersFound);
   res.status(200).json({
     status: 'success',
     message: 'data searched',
