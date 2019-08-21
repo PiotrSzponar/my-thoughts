@@ -9,7 +9,7 @@ exports.getLoginUser = (req, res) => {
   });
 };
 
-exports.searchFriends = catchAsync(async (req, res, next) => {
+exports.search = catchAsync(async (req, res, next) => {
   const { q } = req.query;
 
   if (!q) {
@@ -30,7 +30,8 @@ exports.searchFriends = catchAsync(async (req, res, next) => {
         _id: req.user._id
       }
     ],
-    isHidden: false
+    isHidden: false,
+    isVerified: true
   });
 
   //Todo:
@@ -42,7 +43,7 @@ exports.searchFriends = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    message: 'Data successfully searched',
+    message: 'Searched successfully',
     results: users.length,
     data: {
       users

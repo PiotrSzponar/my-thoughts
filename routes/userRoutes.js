@@ -17,6 +17,6 @@ router.patch('/reset-password/:token', authController.resetPassword);
 
 router.use(authController.protect);
 
-router.post('/search/', userController.searchFriends);
+router.get('/search', userController.search);
 
 module.exports = router;
