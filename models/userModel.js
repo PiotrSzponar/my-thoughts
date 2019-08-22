@@ -90,8 +90,6 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date
 });
 
-userSchema.index({ name: 'text', email: 'text' });
-
 // Before save user to DB check if password filed was changed
 // If was, hash password and remove passwordConfirm (we won't use it)
 userSchema.pre('save', async function(next) {

@@ -16,7 +16,11 @@ exports.search = catchAsync(async (req, res, next) => {
     return next(new AppError('Search cannot be empty', 400));
   }
 
-  const users = await User.find(
+  // If there are spaces at input make alternative regexp like xxx|yyy|zzz
+  const newReg = q.split(' ').join('|');
+
+  // Search for full words
+  let users = await User.find(
     {
       $text: { $search: q },
       _id: { $not: { $eq: req.user._id } },
@@ -26,16 +30,35 @@ exports.search = catchAsync(async (req, res, next) => {
     {
       score: { $meta: 'textScore' }
     }
-  ).sort({ score: { $meta: 'textScore' } });
+  )
+    .sort({ score: { $meta: 'textScore' } })
+    .limit(50);
 
+  // If there are no full words search for part of word
   if (!users.length) {
-    return next(new AppError('No results', 404));
+    users = await User.find({
+      $or: [
+        { name: { $regex: newReg, $options: 'gi' } },
+        { city: { $regex: newReg, $options: 'gi' } },
+        { bio: { $regex: newReg, $options: 'gi' } }
+      ],
+      _id: { $not: { $eq: req.user._id } },
+      isHidden: false,
+      isVerified: true
+    }).limit(50);
+
+    // If there is no full words or even part of them - no results
+    if (!users.length) {
+      return next(new AppError('No results', 404));
+    }
   }
+
+  const results = users.length;
 
   res.status(200).json({
     status: 'success',
     message: 'Searched successfully',
-    results: users.length,
+    results,
     data: {
       users
     }
