@@ -27,12 +27,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please confirm your password'],
     validate: {
+      // Check if password and passwordConfirm are equal
       // This only works on CREATE and SAVE!!!
       validator: function (el) {
         return el === this.password;
       },
       message: 'Passwords are not the same!'
     }
+  },
+  role: {
+    type: String,
+    enum: ['user', 'moderator', 'admin'],
+    default: 'user'
   },
   name: {
     type: String,
@@ -80,7 +86,13 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date
 });
 
+<<<<<<< HEAD
 userSchema.pre('save', async function (next) {
+=======
+// Before save user to DB check if password filed was changed
+// If was, hash password and remove passwordConfirm (we won't use it)
+userSchema.pre('save', async function(next) {
+>>>>>>> dev
   // only run this fn if password was actually modified
   if (!this.isModified('password')) return next();
 
@@ -92,13 +104,19 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
+<<<<<<< HEAD
 userSchema.methods.correctPassword = async function (
+=======
+// Compare hashed passwords
+userSchema.methods.correctPassword = async function(
+>>>>>>> dev
   candidatePassword,
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
+<<<<<<< HEAD
 const userGSchema = new mongoose.Schema({
   username: { type: String, required: [true, 'Username is required'] },
   googleId: { default: null, type: String },
@@ -106,6 +124,21 @@ const userGSchema = new mongoose.Schema({
 
 })
 
+=======
+userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimestamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    return JWTTimestamp < changedTimestamp;
+  }
+
+  // False means NOT changed
+  return false;
+};
+>>>>>>> dev
 
 const User = mongoose.model('User', userSchema);
 const UserG = mongoose.model('UserG', userGSchema);

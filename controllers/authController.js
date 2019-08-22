@@ -5,10 +5,12 @@ const Email = require('../utils/email');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
+// Create JWT token that include ID, secret key from dev.env and expiration time (default 90d)
 const signToken = (id, expiresTime = process.env.JWT_LOGIN_EXPIRES_IN) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: expiresTime });
 };
 
+// Create cookie with JWT token
 const createTokenCookie = (user, statusCode, res) => {
   const token = signToken(user._id);
   const cookieOptions = {
@@ -36,6 +38,7 @@ const createTokenCookie = (user, statusCode, res) => {
   });
 };
 
+// User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     email: req.body.email,
@@ -57,7 +60,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   const verificationURL = `${req.protocol}://${req.get(
     'host'
-  )}/verification?email=${newUser.email}&token=${verificationToken}`;
+  )}/api/users/verification/${verificationToken}`;
 
   await new Email(newUser, verificationURL).sendVerification();
 
@@ -73,12 +76,13 @@ exports.signup = catchAsync(async (req, res, next) => {
   });
 });
 
+// Email address verification
 exports.verification = catchAsync(async (req, res, next) => {
-  // 1) Get user based on the token
+  // Get user based on the token
   const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
   const user = await User.findById(decoded.id);
 
-  // 2) If token has not expired, and there is user, confirm verification
+  // If token has not expired, and there is user, confirm verification
   if (!user) {
     return next(new AppError('Token is invalid or has expired', 400));
   }
@@ -94,8 +98,11 @@ exports.verification = catchAsync(async (req, res, next) => {
   });
 });
 
+// Resend email address verification with refreshed token
 exports.resendVerification = catchAsync(async (req, res, next) => {
-  const user = await User.findOne({ email: req.body.email });
+  const user = await User.findOne({ email: req.body.email }).select(
+    '+isVerified'
+  );
   if (!user) {
     return next(new AppError('There is no user with email address.', 404));
   }
@@ -110,7 +117,7 @@ exports.resendVerification = catchAsync(async (req, res, next) => {
 
   const verificationURL = `${req.protocol}://${req.get(
     'host'
-  )}/verification?email=${user.email}&token=${verificationToken}`;
+  )}/api/users/verification/${verificationToken}`;
 
   await new Email(user, verificationURL).sendVerification();
 
@@ -121,7 +128,8 @@ exports.resendVerification = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.login = catchAsync(async (req, res, next) => {
+// User login
+exports.signin = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -130,7 +138,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
   const user = await User.findOne({ email }).select('+password +isVerified');
 
-  // check if user exists or password is correct
+  // Check if user exists or password is correct
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
   }
@@ -141,6 +149,53 @@ exports.login = catchAsync(async (req, res, next) => {
   createTokenCookie(user, 200, res);
 });
 
+// User sign out - clear JWT cookie
+exports.signout = (req, res) => {
+  res.clearCookie('jwt');
+  res.status(200).json({ status: 'success' });
+};
+
+// Protect routes - only signed in users can get access
+exports.protect = catchAsync(async (req, res, next) => {
+  // Getting token and check of it's there
+  let token;
+  if (req.cookies.jwt) {
+    token = req.cookies.jwt;
+  }
+
+  if (!token) {
+    return next(
+      new AppError('You are not logged in! Please log in to get access.', 401)
+    );
+  }
+
+  // Verification token
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  // Check if user still exists
+  const currentUser = await User.findById(decoded.id);
+  if (!currentUser) {
+    return next(
+      new AppError(
+        'The user belonging to this token does no longer exist.',
+        401
+      )
+    );
+  }
+
+  // Check if user changed password after the token was issued
+  if (currentUser.changedPasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently changed password! Please log in again.', 401)
+    );
+  }
+
+  // Gain access
+  req.user = currentUser;
+  next();
+});
+
+// Forgot Password: provide email and send there reset-password link
 exports.forgotPassword = catchAsync(async (req, res, next) => {
   // Get user based on POST email
   const user = await User.findOne({ email: req.body.email }).select(
@@ -167,6 +222,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   });
 });
 
+// Find user by ID from token and change password
 exports.resetPassword = catchAsync(async (req, res, next) => {
   // Get user based on the token
   const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
@@ -183,6 +239,21 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   user.passwordChangedAt = Date.now() - 1000;
   await user.save();
 
-  // Log the user in, send JWT
-  createTokenCookie(user, 200, res);
+  res.status(200).json({
+    status: 'success',
+    message: 'Password has been changed'
+  });
 });
+
+// Check if user has required role
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // array ['admin', 'moderator'] or string role='admin'
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+    next();
+  };
+};
