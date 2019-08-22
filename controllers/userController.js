@@ -16,26 +16,17 @@ exports.search = catchAsync(async (req, res, next) => {
     return next(new AppError('Search cannot be empty', 400));
   }
 
-  const users = await User.find({
-    $or: [
-      {
-        name: { $regex: `${q}`, $options: 'i' }
-      },
-      {
-        email: { $regex: `${q}`, $options: 'i' }
-      }
-    ],
-    $nor: [
-      {
-        _id: req.user._id
-      }
-    ],
-    isHidden: false,
-    isVerified: true
-  });
-
-  //Todo:
-  //add sorting, so friends are shown first
+  const users = await User.find(
+    {
+      $text: { $search: q },
+      _id: { $not: { $eq: req.user._id } },
+      isHidden: false,
+      isVerified: true
+    },
+    {
+      score: { $meta: 'textScore' }
+    }
+  ).sort({ score: { $meta: 'textScore' } });
 
   if (!users.length) {
     return next(new AppError('No results', 404));
