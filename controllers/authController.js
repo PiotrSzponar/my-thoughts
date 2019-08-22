@@ -150,14 +150,10 @@ exports.signin = catchAsync(async (req, res, next) => {
 });
 
 exports.googleSignIn = catchAsync(async (req, res) => {
-  console.log("IMPORTANT lalal");
-  console.log(req.body);
-  //const gId = google.gId;
-
-  //const user = await User.findOne({ gId })
-  //console.log(user);
-  //createTokenCookie()
-  res.send("Git");
+  const { google } = req.user;
+  const gId = google.gId;
+  const user = await User.findOne({ 'google.gId': gId })
+  createTokenCookie(user, 200, res);
 })
 
 // User sign out - clear JWT cookie
@@ -170,6 +166,7 @@ exports.signout = (req, res) => {
 exports.protect = catchAsync(async (req, res, next) => {
   // Getting token and check of it's there
   let token;
+  console.log("COOKIES", req.cookies);
   if (req.cookies.jwt) {
     token = req.cookies.jwt;
   }

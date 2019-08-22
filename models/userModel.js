@@ -149,4 +149,4 @@ const User = mongoose.model('User', userSchema);
 const UserG = mongoose.model('UserG', userGSchema);
 
 
-module.exports = { User, UserG };
+module.exports = User;

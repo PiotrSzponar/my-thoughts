@@ -2,7 +2,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2');
 const FacebookStrategy = require('passport-facebook');
 const dotenv = require('dotenv');
-const User = require('../models/userModel').User;
+const User = require('../models/userModel');
 dotenv.config({ path: './config/dev.env' });
 
 //save cookie

@@ -16,6 +16,7 @@ router.get('/googleLogout', (req, res) => {
 //succcess
 router.get('/profile', passport.authenticate('google', { session: false, failureRedirect: '/google' }), function (req, res) {
     authController.googleSignIn(req, res);
+    res.redirect('/login')
 })
 //callback google
 

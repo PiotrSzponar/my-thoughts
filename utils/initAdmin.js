@@ -1,11 +1,9 @@
-const User = require('../models/userModel').User;
+const User = require('../models/userModel');
 
 // Check if any admin exists. If not, create default one.
 module.exports = async () => {
   const user = await User.findOne({ 'role': 'admin' });
-  console.log(user);
   if (!user) {
-    console.log("robie usera admina")
     User.create({
       methods: 'local',
       role: 'admin',
