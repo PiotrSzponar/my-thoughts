@@ -149,6 +149,17 @@ exports.signin = catchAsync(async (req, res, next) => {
   createTokenCookie(user, 200, res);
 });
 
+exports.googleSignIn = catchAsync(async (req, res) => {
+  console.log("IMPORTANT lalal");
+  console.log(req.body);
+  //const gId = google.gId;
+
+  //const user = await User.findOne({ gId })
+  //console.log(user);
+  //createTokenCookie()
+  res.send("Git");
+})
+
 // User sign out - clear JWT cookie
 exports.signout = (req, res) => {
   res.clearCookie('jwt');

@@ -15,7 +15,7 @@ router.get('/googleLogout', (req, res) => {
 })
 //succcess
 router.get('/profile', passport.authenticate('google', { session: false, failureRedirect: '/google' }), function (req, res) {
-    authGoogleController.signToken(req, res);
+    authController.googleSignIn(req, res);
 })
 //callback google
 
@@ -32,9 +32,7 @@ router.get('/verify', authGoogleController.checkTokenMW, (req, res) => {
 //Facebook Signup
 router.get('/facebook', passport.authenticate('facebook'));
 
-router.get('/profileFb', passport.authenticate('facebook', { session: false, failureRedirect: '/facebook' }), function (req, res) {
-    authGoogleController.signToken(req, res);
-})
+router.get('/profileFb', passport.authenticate('facebook', { session: false, failureRedirect: '/facebook' }))
 
 router.post('/signup', authController.signup);
 
