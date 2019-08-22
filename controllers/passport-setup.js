@@ -2,7 +2,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2');
 const FacebookStrategy = require('passport-facebook');
 const dotenv = require('dotenv');
-const UserG = require('../models/userModel').UserG;
+const User = require('../models/userModel').User;
 dotenv.config({ path: './config/dev.env' });
 
 //save cookie
@@ -27,7 +27,7 @@ passport.use(
     }, (accessToken, refreshToken, profile, done) => {
         //passport callback function
         //check if user exists in db 
-        UserG.findOne({ googleId: profile.id })
+        User.findOne({ 'google.gId': profile.id })
             .then((currentUser) => {
                 if (currentUser) {
                     //already have the user 
@@ -35,7 +35,9 @@ passport.use(
                     //send to serialize
                     return done(null, currentUser);
                 } else {
-                    new UserG({ username: profile.displayName, googleId: profile.id }).save().then((newUser) => {
+                    console.log("-----")
+                    console.log(profile.id)
+                    new User({ methods: 'google', local: { email: "superemail" }, google: { 'gId': profile.id, 'email': "super@emai.com" } }).save().then((newUser) => {
                         console.log('new user created', newUser);
                         //send to serialize
                         return done(null, newUser);

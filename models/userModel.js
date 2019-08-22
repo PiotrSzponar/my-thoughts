@@ -3,120 +3,128 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  email: {
+  methods: {
     type: String,
-    required: [true, 'Please provide your e-mail.'],
-    unique: true,
-    lowercase: true,
-    trim: true,
-    validate: [validator.isEmail, 'Please provide a valid e-mail.']
+    enum: ['local', 'google', 'facebook']
   },
-  password: {
-    type: String,
-    required: [true, 'Please provide a password.'],
-    validate: {
-      validator: function (el) {
-        return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(el);
-      },
-      message:
-        'Password should contain: min 8 characters, at least one lower and upper case letter, one number and one special character.'
+  local: {
+    email: {
+      type: String,
+      //required: [true, 'Please provide your e-mail.'],
+      //unique: true,
+      lowercase: true,
+      trim: true,
+      //validate: [validator.isEmail, 'Please provide a valid e-mail.']
     },
-    select: false
-  },
-  passwordConfirm: {
-    type: String,
-    required: [true, 'Please confirm your password'],
-    validate: {
-      // Check if password and passwordConfirm are equal
-      // This only works on CREATE and SAVE!!!
-      validator: function (el) {
-        return el === this.password;
+    password: {
+      type: String,
+      //required: [true, 'Please provide a password.'],
+      validate: {
+        validator: function (el) {
+          return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(el);
+        },
+        message:
+          'Password should contain: min 8 characters, at least one lower and upper case letter, one number and one special character.'
       },
-      message: 'Passwords are not the same!'
-    }
-  },
-  role: {
-    type: String,
-    enum: ['user', 'moderator', 'admin'],
-    default: 'user'
-  },
-  name: {
-    type: String,
-    required: [
-      true,
-      'Name is required. It can be your real name or a nick name.'
-    ],
-    trim: true,
-    maxlength: [30, 'Name can have less than 30 characters.']
-  },
-  gender: {
-    type: String,
-    enum: {
-      values: ['female', 'male', 'other'],
-      message: 'Please provide a valid gender.'
+      select: false
     },
-    required: [true, 'Gender is required.']
+    passwordConfirm: {
+      type: String,
+      //required: [true, 'Please confirm your password'],
+      validate: {
+        // Check if password and passwordConfirm are equal
+        // This only works on CREATE and SAVE!!!
+        validator: function (el) {
+          return el === this.local.password;
+        },
+        message: 'Passwords are not the same!'
+      }
+    },
+    role: {
+      type: String,
+      enum: ['user', 'moderator', 'admin'],
+      default: 'user'
+    },
+    name: {
+      type: String,
+      // required: [
+      //   true,
+      //   'Name is required. It can be your real name or a nick name.'
+      // ],
+      trim: true,
+      maxlength: [30, 'Name can have less than 30 characters.']
+    },
+    gender: {
+      type: String,
+      enum: {
+        values: ['female', 'male', 'other'],
+        message: 'Please provide a valid gender.'
+      },
+      //required: [true, 'Gender is required.']
+    },
+    birthDate: {
+      type: String,
+      //required: [true, 'Birth date is required.'],
+      validate: [
+        validator.isBefore,
+        'Please provide a valid birth date (should be in the past).'
+      ]
+    },
+    photo: {
+      type: String
+    },
+    bio: {
+      type: String,
+      maxlength: [250, 'Bio can have less than 250 characters.']
+    },
+    country: {
+      type: String
+    },
+    city: {
+      type: String
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+      select: false
+    },
+    passwordChangedAt: Date
   },
-  birthDate: {
-    type: String,
-    required: [true, 'Birth date is required.'],
-    validate: [
-      validator.isBefore,
-      'Please provide a valid birth date (should be in the past).'
-    ]
+  google: {
+    gId: { type: String },
+    email: { type: String, }
   },
-  photo: {
-    type: String
-  },
-  bio: {
-    type: String,
-    maxlength: [250, 'Bio can have less than 250 characters.']
-  },
-  country: {
-    type: String
-  },
-  city: {
-    type: String
-  },
-  isVerified: {
-    type: Boolean,
-    default: false,
-    select: false
-  },
-  passwordChangedAt: Date
+  facebook: {
+    fId: { type: String }
+  }
 });
 
-<<<<<<< HEAD
-userSchema.pre('save', async function (next) {
-=======
 // Before save user to DB check if password filed was changed
 // If was, hash password and remove passwordConfirm (we won't use it)
-userSchema.pre('save', async function(next) {
->>>>>>> dev
+userSchema.pre('save', async function (next) {
+  //if user is from google or facebook
+  if (this.method !== 'local') {
+    next();
+  }
   // only run this fn if password was actually modified
   if (!this.isModified('password')) return next();
 
   // hash the password with cost od 12
-  this.password = await bcrypt.hash(this.password, 12);
+  this.password = await bcrypt.hash(this.local.password, 12);
 
   // delete passwordConfirm field
   this.passwordConfirm = undefined;
   next();
 });
 
-<<<<<<< HEAD
-userSchema.methods.correctPassword = async function (
-=======
 // Compare hashed passwords
-userSchema.methods.correctPassword = async function(
->>>>>>> dev
+userSchema.methods.correctPassword = async function (
   candidatePassword,
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-<<<<<<< HEAD
 const userGSchema = new mongoose.Schema({
   username: { type: String, required: [true, 'Username is required'] },
   googleId: { default: null, type: String },
@@ -124,11 +132,10 @@ const userGSchema = new mongoose.Schema({
 
 })
 
-=======
-userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
-  if (this.passwordChangedAt) {
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.local.passwordChangedAt) {
     const changedTimestamp = parseInt(
-      this.passwordChangedAt.getTime() / 1000,
+      this.local.passwordChangedAt.getTime() / 1000,
       10
     );
 
@@ -138,7 +145,6 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
   // False means NOT changed
   return false;
 };
->>>>>>> dev
 
 const User = mongoose.model('User', userSchema);
 const UserG = mongoose.model('UserG', userGSchema);
