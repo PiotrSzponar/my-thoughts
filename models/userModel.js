@@ -128,4 +128,6 @@ userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
 
 const User = mongoose.model('User', userSchema);
 
+User.collection.createIndex({ name: 'text', city: 'text', bio: 'text' });
+
 module.exports = User;
