@@ -1,6 +1,7 @@
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const APIFeatures = require('./../utils/apiFeatures');
 
 // Reduce req.body only to allowed fields
 const filterObj = (obj, ...allowedFields) => {
@@ -163,5 +164,30 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
     status: 'success',
     message: `User ${userAction}`,
     data: user
+  });
+});
+
+// Only for Admin (all access)
+
+// Get all users with filtering, sorting, limit fields and pagination (utils/apiFeatures.js)
+exports.getAllUsers = catchAsync(async (req, res, next) => {
+  const features = new APIFeatures(
+    User.find().select(
+      `${!req.query.fields && '+isHidden +isVerified +isActive'}`
+    ),
+    req.query
+  )
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+  const users = await features.query;
+
+  res.status(200).json({
+    status: 'success',
+    results: users.length,
+    data: {
+      data: users
+    }
   });
 });
