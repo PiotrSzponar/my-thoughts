@@ -23,7 +23,8 @@ router.get('/search', userController.search);
 router
   .route('/me/')
   .get(userController.getUser)
-  .patch(userController.updateUser);
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
 
 router.patch('/me/change-password', authController.updatePassword);
 
@@ -33,6 +34,7 @@ router.use(authController.restrictTo('admin'));
 router
   .route('/:id')
   .get(userController.getUser)
-  .patch(userController.updateUser);
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
 
 module.exports = router;

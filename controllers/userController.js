@@ -139,3 +139,29 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     }
   });
 });
+
+// Delete (deactivate) user
+// With role user:
+//  - deactivate to hide everything from user and logout
+// With role admin:
+//  - delete user from DB
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  let user = null;
+  if (req.user.role === 'admin') {
+    user = await User.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return next(new AppError('No user found with that ID', 404));
+    }
+  } else {
+    await User.findByIdAndUpdate(req.user.id, { isActive: false });
+    res.clearCookie('jwt');
+  }
+
+  const userAction = user === null ? 'deactivated' : 'deleted';
+
+  res.status(200).json({
+    status: 'success',
+    message: `User ${userAction}`,
+    data: user
+  });
+});
