@@ -31,7 +31,10 @@ router.patch('/me/change-password', authController.updatePassword);
 // After this MW - only for Admin
 router.use(authController.restrictTo('admin'));
 
-router.route('/').get(userController.getAllUsers);
+router
+  .route('/')
+  .get(userController.getAllUsers)
+  .post(userController.createUser);
 
 router
   .route('/:id')

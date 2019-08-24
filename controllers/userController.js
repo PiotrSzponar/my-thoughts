@@ -191,3 +191,31 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     }
   });
 });
+
+// Create new user
+exports.createUser = catchAsync(async (req, res, next) => {
+  const newUser = await User.create({
+    email: req.body.email,
+    password: req.body.password,
+    passwordConfirm: req.body.passwordConfirm,
+    name: req.body.name,
+    gender: req.body.gender,
+    birthDate: req.body.birthDate,
+    photo: req.body.photo,
+    bio: req.body.bio,
+    country: req.body.country,
+    city: req.body.city,
+    role: req.body.role,
+    isVerified: req.body.isVerified,
+    isHidden: req.body.isHidden,
+    isActive: req.body.isActive
+  });
+
+  res.status(201).json({
+    status: 'success',
+    message: 'User created',
+    data: {
+      user: newUser
+    }
+  });
+});
