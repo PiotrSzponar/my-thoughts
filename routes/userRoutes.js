@@ -19,29 +19,4 @@ router.use(authController.protect);
 
 router.get('/search', userController.search);
 
-// After this MW - only for logged in users
-router.use(authController.protect);
-
-// router
-//   .route('/me/')
-//   .get(userController.getUser)
-//   .patch(userController.updateMe)
-//   .delete(userController.deleteMe);
-
-router.patch('/me/change-password', authController.updatePassword);
-
-// After this MW - only for Admin
-router.use(authController.restrictTo('admin'));
-
-// router
-//   .route('/')
-//   .get(userController.getAllUsers)
-//   .post(userController.createUser);
-
-// router
-//   .route('/:id')
-//   .get(userController.getUser)
-//   .patch(userController.updateUser)
-//   .delete(userController.deleteUser);
-
 module.exports = router;

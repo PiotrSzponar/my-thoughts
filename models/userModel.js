@@ -88,7 +88,7 @@ const userSchema = new mongoose.Schema({
     default: false,
     select: false
   },
-  active: {
+  isActive: {
     type: Boolean,
     default: true,
     select: false

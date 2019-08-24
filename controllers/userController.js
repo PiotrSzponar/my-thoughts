@@ -2,18 +2,15 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
-exports.getLoginUser = (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: `Hey ${req.user.name} - you are a logged in user!`
-  });
-};
-
+// Search users by name, city or bio
 exports.search = catchAsync(async (req, res, next) => {
-  const { q } = req.query;
+  const q = req.query.q.trim();
 
   if (!q) {
-    return next(new AppError('Search cannot be empty', 400));
+    return next(new AppError('Search cannot be empty.', 400));
+  }
+  if (q.length < 3) {
+    return next(new AppError('Search require at least 3 characters.', 400));
   }
 
   // If there are spaces at input make alternative regexp like xxx|yyy|zzz

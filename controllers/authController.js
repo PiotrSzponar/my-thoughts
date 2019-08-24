@@ -38,6 +38,19 @@ const createTokenCookie = (user, statusCode, res) => {
   });
 };
 
+// Check if user has required role
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    // array ['admin', 'moderator'] or string role='admin'
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+    next();
+  };
+};
+
 // User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
@@ -65,14 +78,18 @@ exports.signup = catchAsync(async (req, res, next) => {
   await new Email(newUser, verificationURL).sendVerification();
 
   newUser.password = undefined;
+  newUser.role = undefined;
+  newUser.isVerified = undefined;
+  newUser.isHidden = undefined;
+  newUser.isActive = undefined;
 
   res.status(201).json({
     status: 'success',
+    message: 'User created and verification token sent to email!',
     data: {
       user: newUser
     },
-    verificationToken,
-    message: 'User created and verification token sent to email!'
+    verificationToken
   });
 });
 
@@ -136,11 +153,16 @@ exports.signin = catchAsync(async (req, res, next) => {
     next(new AppError('Please provide email and password', 400));
   }
 
-  const user = await User.findOne({ email }).select('+password +isVerified');
+  const user = await User.findOne({ email }).select(
+    '+password +isVerified +isActive'
+  );
 
   // Check if user exists or password is correct
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('Incorrect email or password', 401));
+  }
+  if (!user.isActive) {
+    return next(new AppError('User is not active', 400));
   }
   if (!user.isVerified) {
     return next(new AppError('User is not verified', 400));
@@ -266,16 +288,3 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     message: 'Password has been changed'
   });
 });
-
-// Check if user has required role
-exports.restrictTo = (...roles) => {
-  return (req, res, next) => {
-    // array ['admin', 'moderator'] or string role='admin'
-    if (!roles.includes(req.user.role)) {
-      return next(
-        new AppError('You do not have permission to perform this action', 403)
-      );
-    }
-    next();
-  };
-};
