@@ -34,9 +34,11 @@ passport.use(
           //send to serialize
           return done(null, currentUser);
         } else {
+          console.log(profile);
           new User({
             methods: 'google',
             isVerified: true,
+            name: profile.given_name,
             email: profile.email,
             google: { gId: profile.id }
           })
