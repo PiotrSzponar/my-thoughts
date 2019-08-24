@@ -61,3 +61,24 @@ exports.search = catchAsync(async (req, res, next) => {
     }
   });
 });
+
+// Show current user
+// With role user:
+//  - get id from req.user and show basic info about logged in user
+// With role admin:
+//  - get user id from params and show all info about user
+exports.getUser = catchAsync(async (req, res, next) => {
+  const searchedUser =
+    req.user.role === 'admin'
+      ? await User.findById(req.params.id).select(
+          '+isHidden +isVerified +isActive'
+        )
+      : await User.findById(req.user.id);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      searchedUser
+    }
+  });
+});
