@@ -2,6 +2,15 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
 
+// Reduce req.body only to allowed fields
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach(el => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+  return newObj;
+};
+
 // Search users by name, city or bio
 exports.search = catchAsync(async (req, res, next) => {
   const q = req.query.q.trim();
@@ -79,6 +88,54 @@ exports.getUser = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       searchedUser
+    }
+  });
+});
+
+// Update user profile
+// With role user:
+//  - get id from req.user and allow to change gender, birth date, photo, bio, country, city or isHidden
+// With role admin:
+//  - get user id from params and allow to change everything except password
+exports.updateUser = catchAsync(async (req, res, next) => {
+  // Create error if user POSTs password data
+  if (
+    req.user.role !== 'admin' &&
+    (req.body.password || req.body.passwordConfirm)
+  ) {
+    return next(new AppError('This route is not for password updates.', 400));
+  }
+
+  // Filtered out unwanted fields names that are not allowed to be updated
+  const filteredBody =
+    req.user.role !== 'admin' &&
+    filterObj(
+      req.body,
+      'gender',
+      'birthDate',
+      'photo',
+      'bio',
+      'country',
+      'city',
+      'isHidden'
+    );
+
+  // Update user document and returned the new one
+  const updatedUser =
+    req.user.role === 'admin'
+      ? await User.findByIdAndUpdate(req.params.id, req.body, {
+          new: true,
+          runValidators: true
+        }).select('+isHidden +isVerified +isActive')
+      : await User.findByIdAndUpdate(req.user.id, filteredBody, {
+          new: true,
+          runValidators: true
+        });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      user: updatedUser
     }
   });
 });

@@ -20,11 +20,19 @@ router.use(authController.protect);
 
 router.get('/search', userController.search);
 
-router.route('/me/').get(userController.getUser);
+router
+  .route('/me/')
+  .get(userController.getUser)
+  .patch(userController.updateUser);
+
+router.patch('/me/change-password', authController.updatePassword);
 
 // After this MW - only for Admin
 router.use(authController.restrictTo('admin'));
 
-router.route('/:id').get(userController.getUser);
+router
+  .route('/:id')
+  .get(userController.getUser)
+  .patch(userController.updateUser);
 
 module.exports = router;
