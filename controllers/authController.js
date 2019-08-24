@@ -155,6 +155,12 @@ exports.googleSignIn = catchAsync(async (req, res) => {
   const user = await User.findOne({ 'google.gId': gId })
   createTokenCookie(user, 200, res);
 })
+exports.facebookSignIn = catchAsync(async(req,res)=>{
+  const { facebook } = req.user;
+  const fId = facebook.fId;
+  const user = await User.findOne({ 'facebook.fId': fId });
+  createTokenCookie(user, 200, res);
+})
 
 // User sign out - clear JWT cookie
 exports.signout = (req, res) => {

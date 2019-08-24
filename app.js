@@ -14,7 +14,7 @@ const demoRouter = require('./routes/demoRoutes');
 const userRouter = require('./routes/userRoutes');
 
 const passport = require('passport');
-const passportSetup = require('./controllers/passport-setup');
+const passportSetup = require('./utils/passport-setup');
 
 const app = express();
 app.use(passport.initialize());

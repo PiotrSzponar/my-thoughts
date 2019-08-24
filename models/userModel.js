@@ -94,7 +94,8 @@ const userSchema = new mongoose.Schema({
     email: { type: String, }
   },
   facebook: {
-    fId: { type: String }
+    fId: { type: String },
+    email:{ type:String }
   }
 });
 

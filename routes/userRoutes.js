@@ -1,6 +1,5 @@
 const express = require('express');
 const authController = require('../controllers/authController');
-const authGoogleController = require('../controllers/authGoogleController');
 const passport = require('passport');
 
 const router = express.Router();
@@ -13,27 +12,14 @@ router.get('/googleLogout', (req, res) => {
     res.redirect('https://accounts.google.com/logout');
     //token reset 
 })
-//succcess
-router.get('/profile', passport.authenticate('google', { session: false, failureRedirect: '/google' }), function (req, res) {
-    authController.googleSignIn(req, res);
-    res.redirect('/login')
-})
-//callback google
-
-router.get('/verify', authGoogleController.checkTokenMW, (req, res) => {
-    authGoogleController.verifyToken(req, res);
-    if (null === req.authData) {
-        res.sendStatus(403);
-    } else {
-        res.json(req.authData);
-    }
-});
+//succcess callback from  google gain token from our app and redirect to login
+router.get('/googleCallback', passport.authenticate('google', { session: false, failureRedirect: '/google' }), authController.googleSignIn)
 //End of Google verification
 
 //Facebook Signup
-router.get('/facebook', passport.authenticate('facebook'));
+router.get('/facebook', passport.authenticate('facebook',{session:false,scope:['email']}));
 
-router.get('/profileFb', passport.authenticate('facebook', { session: false, failureRedirect: '/facebook' }))
+router.get('/facebookCallback', passport.authenticate('facebook', { session: false, failureRedirect: '/facebook' }), authController.facebookSignIn)
 
 router.post('/signup', authController.signup);
 
