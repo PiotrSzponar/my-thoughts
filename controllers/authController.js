@@ -78,7 +78,6 @@ exports.signup = catchAsync(async (req, res, next) => {
   await new Email(newUser, verificationURL).sendVerification();
 
   newUser.password = undefined;
-  newUser.role = undefined;
   newUser.isVerified = undefined;
   newUser.isHidden = undefined;
   newUser.isActive = undefined;
