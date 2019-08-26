@@ -1,10 +1,7 @@
 const express = require('express');
 const authController = require('../controllers/authController');
-<<<<<<< HEAD
 const passport = require('passport');
-=======
 const userController = require('../controllers/userController');
->>>>>>> origin/dev
 
 const router = express.Router();
 
@@ -13,15 +10,15 @@ const router = express.Router();
 //start google starategy
 router.get('/google', passport.authenticate('google', { session: false, scope: ['profile', 'email'] }));
 router.get('/googleLogout', (req, res) => {
-    res.redirect('https://accounts.google.com/logout');
-    //token reset 
+  res.redirect('https://accounts.google.com/logout');
+  //token reset 
 })
 //succcess callback from  google gain token from our app and redirect to login
 router.get('/googleCallback', passport.authenticate('google', { session: false, failureRedirect: '/google' }), authController.googleSignIn)
 //End of Google verification
 
 //Facebook Signup
-router.get('/facebook', passport.authenticate('facebook',{session:false,scope:['email']}));
+router.get('/facebook', passport.authenticate('facebook', { session: false, scope: ['email'] }));
 
 router.get('/facebookCallback', passport.authenticate('facebook', { session: false, failureRedirect: '/facebook' }), authController.facebookSignIn)
 
