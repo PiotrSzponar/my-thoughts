@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
-    //validate: [validator.isEmail, 'Please provide a valid e-mail.']
+    validate: [validator.isEmail, 'Please provide a valid e-mail.']
   },
   password: {
     type: String,
@@ -95,7 +95,7 @@ const userSchema = new mongoose.Schema({
   },
   facebook: {
     fId: { type: String },
-    email:{ type:String }
+    email: { type: String }
   }
 });
 
@@ -103,7 +103,7 @@ const userSchema = new mongoose.Schema({
 // If was, hash password and remove passwordConfirm (we won't use it)
 userSchema.pre('save', async function (next) {
   //if user is from google or facebook
-  if (this.method !== 'local') {
+  if (this.methods !== 'local') {
     next();
   }
   // only run this fn if password was actually modified
@@ -125,13 +125,6 @@ userSchema.methods.correctPassword = async function (
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-const userGSchema = new mongoose.Schema({
-  username: { type: String, required: [true, 'Username is required'] },
-  googleId: { default: null, type: String },
-  facebookId: { default: null, type: String }
-
-})
-
 userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
@@ -147,7 +140,6 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 };
 
 const User = mongoose.model('User', userSchema);
-const UserG = mongoose.model('UserG', userGSchema);
 
 
 module.exports = User;

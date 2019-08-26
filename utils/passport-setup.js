@@ -3,18 +3,6 @@ const GoogleStrategy = require('passport-google-oauth2');
 const FacebookStrategy = require('passport-facebook');
 const User = require('../models/userModel');
 
-//save cookie
-// passport.serializeUser((user, done) => {
-//     done(null, user.id);
-// })
-
-// //when cookie comeback to us
-// passport.deserializeUser((id, done) => {
-//     UserG.findById(id).then((user) => {
-//         done(null, user);
-//     });
-// })
-
 //Google
 passport.use(
   new GoogleStrategy(
@@ -62,7 +50,7 @@ passport.use(
       callbackURL: '/api/users/facebookCallback',
       profileFields: ['id', 'emails', 'name']
     },
-    function(accessToken, refreshToken, profileRaw, done) {
+    function (accessToken, refreshToken, profileRaw, done) {
       const profile = profileRaw._json;
       User.findOne({ 'facebook.fId': profile.id }).then(currentUser => {
         if (currentUser) {

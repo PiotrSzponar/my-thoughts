@@ -41,6 +41,7 @@ const createTokenCookie = (user, statusCode, res) => {
 // User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
+    methods: 'local',
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
@@ -155,7 +156,7 @@ exports.googleSignIn = catchAsync(async (req, res) => {
   const user = await User.findOne({ 'google.gId': gId })
   createTokenCookie(user, 200, res);
 })
-exports.facebookSignIn = catchAsync(async(req,res)=>{
+exports.facebookSignIn = catchAsync(async (req, res) => {
   const { facebook } = req.user;
   const fId = facebook.fId;
   const user = await User.findOne({ 'facebook.fId': fId });
