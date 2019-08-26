@@ -10,7 +10,6 @@ const cookieParser = require('cookie-parser');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
-const demoRouter = require('./routes/demoRoutes');
 const userRouter = require('./routes/userRoutes');
 
 const passport = require('passport');
@@ -61,7 +60,6 @@ app.use(
 
 // ROUTES
 app.use('/api/users', userRouter);
-app.use('/', demoRouter);
 
 // 404 - Not Found
 app.all('*', (req, res, next) => {

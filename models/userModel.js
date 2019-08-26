@@ -99,7 +99,13 @@ const userSchema = new mongoose.Schema({
   },
   isHidden: {
     type: Boolean,
-    default: false
+    default: false,
+    select: false
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+    select: false
   },
   passwordChangedAt: Date
 });
@@ -119,6 +125,12 @@ userSchema.pre('save', async function (next) {
 
   // delete passwordConfirm field
   this.passwordConfirm = undefined;
+  next();
+});
+
+// Return only active users when using 'find' methods
+userSchema.pre(/^find/, function(next) {
+  this.find({ active: { $ne: false } });
   next();
 });
 
