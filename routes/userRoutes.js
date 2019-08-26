@@ -1,6 +1,10 @@
 const express = require('express');
 const authController = require('../controllers/authController');
+<<<<<<< HEAD
 const passport = require('passport');
+=======
+const userController = require('../controllers/userController');
+>>>>>>> origin/dev
 
 const router = express.Router();
 
@@ -31,5 +35,9 @@ router.get('/signout', authController.signout);
 
 router.post('/forgot-password', authController.forgotPassword);
 router.patch('/reset-password/:token', authController.resetPassword);
+
+router.use(authController.protect);
+
+router.get('/search', userController.search);
 
 module.exports = router;

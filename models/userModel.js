@@ -96,7 +96,12 @@ const userSchema = new mongoose.Schema({
   facebook: {
     fId: { type: String },
     email: { type: String }
-  }
+  },
+  isHidden: {
+    type: Boolean,
+    default: false
+  },
+  passwordChangedAt: Date
 });
 
 // Before save user to DB check if password filed was changed
@@ -141,5 +146,11 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 
 const User = mongoose.model('User', userSchema);
 
+<<<<<<< HEAD
 
 module.exports = User;
+=======
+User.collection.createIndex({ name: 'text', city: 'text', bio: 'text' });
+
+module.exports = User;
+>>>>>>> origin/dev
