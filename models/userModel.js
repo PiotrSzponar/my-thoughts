@@ -129,7 +129,7 @@ userSchema.pre('save', async function (next) {
 });
 
 // Return only active users when using 'find' methods
-userSchema.pre(/^find/, function(next) {
+userSchema.pre(/^find/, function (next) {
   this.find({ active: { $ne: false } });
   next();
 });
@@ -158,11 +158,6 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
 
 const User = mongoose.model('User', userSchema);
 
-<<<<<<< HEAD
-
-module.exports = User;
-=======
 User.collection.createIndex({ name: 'text', city: 'text', bio: 'text' });
 
 module.exports = User;
->>>>>>> origin/dev

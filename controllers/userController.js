@@ -3,19 +3,11 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const APIFeatures = require('./../utils/apiFeatures');
 
-<<<<<<< HEAD
-exports.getLoginUser = (req, res) => {
-  console.log(req.user)
-  res.status(200).json({
-    status: 'success',
-    message: `Hey ${req.user.name} - you are a logged in user!`
-=======
 // Reduce req.body only to allowed fields
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach(el => {
     if (allowedFields.includes(el)) newObj[el] = obj[el];
->>>>>>> origin/dev
   });
   return newObj;
 };
@@ -89,8 +81,8 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const searchedUser =
     req.user.role === 'admin' && req.route.path !== '/me/'
       ? await User.findById(req.params.id).select(
-          '+isHidden +isVerified +isActive'
-        )
+        '+isHidden +isVerified +isActive'
+      )
       : await User.findById(req.user.id);
 
   if (!searchedUser) {
@@ -137,13 +129,13 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   const updatedUser =
     req.user.role === 'admin' && req.route.path !== '/me/'
       ? await User.findByIdAndUpdate(req.params.id, req.body, {
-          new: true,
-          runValidators: true
-        }).select('+isHidden +isVerified +isActive')
+        new: true,
+        runValidators: true
+      }).select('+isHidden +isVerified +isActive')
       : await User.findByIdAndUpdate(req.user.id, filteredBody, {
-          new: true,
-          runValidators: true
-        });
+        new: true,
+        runValidators: true
+      });
 
   if (!updatedUser) {
     return next(new AppError('No user found', 404));
