@@ -5,6 +5,7 @@ module.exports = async () => {
   const user = await User.findOne({ role: 'admin' });
   if (!user) {
     User.create({
+      method: 'local',
       role: 'admin',
       email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD,
