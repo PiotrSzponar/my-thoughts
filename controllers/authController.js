@@ -28,6 +28,8 @@ const createTokenCookie = (user, statusCode, res) => {
   // Remove password and isVerified from output
   user.password = undefined;
   user.isVerified = undefined;
+  user.isActive = undefined;
+  user.isCompleted = undefined;
 
   res.status(statusCode).json({
     status: 'success',
@@ -37,8 +39,9 @@ const createTokenCookie = (user, statusCode, res) => {
     }
   });
 };
+exports.createTokenCookie = createTokenCookie;
 
-// Check if user has required role
+// Check if user has required field
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     // array ['admin', 'moderator'] or string role='admin'
@@ -51,9 +54,58 @@ exports.restrictTo = (...roles) => {
   };
 };
 
+exports.socialSignin = catchAsync(async (req, res, next) => {
+  if (!req.user) {
+    return next(new AppError('Use social login!', 403));
+  }
+  createTokenCookie(req.user, 200, res);
+});
+
+// Complete user profile after social login
+exports.socialComplete = catchAsync(async (req, res, next) => {
+  if (!req.user || req.user.method === 'local') {
+    return next(new AppError('Use social login!', 403));
+  }
+  if (req.user.isCompleted) {
+    return next(
+      new AppError(
+        'Your profile is completed. This is not for updating user profile.',
+        403
+      )
+    );
+  }
+  const user = await User.findOneAndUpdate(
+    {
+      _id: req.user.id
+    },
+    {
+      name: req.body.name || req.user.name,
+      gender: req.body.gender,
+      birthDate: req.body.birthDate,
+      photo: req.body.photo || req.user.photo,
+      bio: req.body.bio,
+      country: req.body.country,
+      city: req.body.city,
+      isCompleted: true
+    },
+    {
+      new: true,
+      runValidators: true
+    }
+  );
+  res.status(201).json({
+    status: 'success',
+    message: 'User profile completed',
+    data: {
+      user
+    }
+  });
+});
+
 // User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
+    method: 'local',
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
@@ -63,7 +115,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     photo: req.body.photo,
     bio: req.body.bio,
     country: req.body.country,
-    city: req.body.city
+    city: req.body.city,
+    isCompleted: true
   });
 
   const verificationToken = signToken(
@@ -105,6 +158,11 @@ exports.verification = catchAsync(async (req, res, next) => {
   if (user.isVerified) {
     return next(new AppError('This user has already been verified', 400));
   }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
+  }
+
   user.isVerified = true;
   await user.save({ validateBeforeSave: false });
 
@@ -124,6 +182,10 @@ exports.resendVerification = catchAsync(async (req, res, next) => {
   }
   if (user.isVerified) {
     return next(new AppError('This user has already been verified', 400));
+  }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
   }
 
   const verificationToken = signToken(
@@ -165,6 +227,10 @@ exports.signin = catchAsync(async (req, res, next) => {
   }
   if (!user.isVerified) {
     return next(new AppError('User is not verified', 400));
+  }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
   }
 
   createTokenCookie(user, 200, res);
@@ -226,6 +292,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     if (!user.isVerified) {
       return next(new AppError('User is not verified', 400));
     }
+    // Check if user used local login method
+    if (user.method !== 'local') {
+      return next(new AppError('User used social login', 400));
+    }
     // Generate token
     const resetToken = signToken(user._id, process.env.JWT_RESET_EXPIRES_IN);
 
@@ -253,6 +323,10 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(new AppError('Token is invalid or has expired', 400));
   }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
+  }
   // Change password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -269,6 +343,11 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 exports.updatePassword = catchAsync(async (req, res, next) => {
   // Get user from collection
   const user = await User.findById(req.user.id).select('+password');
+
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
+  }
 
   // Check if POSTed current password is correct
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {

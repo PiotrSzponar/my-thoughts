@@ -1,8 +1,34 @@
 const express = require('express');
+const passport = require('passport');
 const authController = require('../controllers/authController');
 const userController = require('../controllers/userController');
 
 const router = express.Router();
+
+// Google Signup
+// start google strategy
+router.get(
+  '/signup/google',
+  passport.authenticate('google', {
+    session: false,
+    scope: ['profile', 'email']
+  })
+);
+// success
+router.get(
+  '/signup/google/redirect',
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: '../google'
+  }),
+  authController.socialSignin
+);
+
+router.patch(
+  '/signup/social-complete',
+  authController.protect,
+  authController.socialComplete
+);
 
 router.post('/signup', authController.signup);
 

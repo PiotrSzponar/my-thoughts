@@ -3,6 +3,11 @@ const validator = require('validator');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
+  method: {
+    type: String,
+    enum: ['local', 'google', 'facebook'],
+    required: true
+  },
   email: {
     type: String,
     required: [true, 'Please provide your e-mail.'],
@@ -13,7 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password.'],
+    // required: [true, 'Please provide a password.'],
     validate: {
       validator: function(el) {
         return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(el);
@@ -25,7 +30,7 @@ const userSchema = new mongoose.Schema({
   },
   passwordConfirm: {
     type: String,
-    required: [true, 'Please confirm your password'],
+    // required: [true, 'Please confirm your password'],
     validate: {
       // Check if password and passwordConfirm are equal
       // This only works on CREATE and SAVE!!!
@@ -35,6 +40,7 @@ const userSchema = new mongoose.Schema({
       message: 'Passwords are not the same!'
     }
   },
+  passwordChangedAt: Date,
   role: {
     type: String,
     enum: ['user', 'moderator', 'admin'],
@@ -54,12 +60,12 @@ const userSchema = new mongoose.Schema({
     enum: {
       values: ['female', 'male', 'other'],
       message: 'Please provide a valid gender.'
-    },
-    required: [true, 'Gender is required.']
+    }
+    // required: [true, 'Gender is required.']
   },
   birthDate: {
     type: String,
-    required: [true, 'Birth date is required.'],
+    // required: [true, 'Birth date is required.'],
     validate: [
       validator.isBefore,
       'Please provide a valid birth date (should be in the past).'
@@ -93,7 +99,17 @@ const userSchema = new mongoose.Schema({
     default: true,
     select: false
   },
-  passwordChangedAt: Date
+  isCompleted: {
+    type: Boolean,
+    default: false,
+    select: false
+  },
+  googleId: {
+    type: String
+  },
+  facebookId: {
+    type: String
+  }
 });
 
 // Before save user to DB check if password filed was changed
