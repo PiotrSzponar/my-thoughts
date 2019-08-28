@@ -111,7 +111,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     return next(new AppError('This route is not for password updates.', 400));
   }
 
-  // Filtered out unwanted fields names that are not allowed to be updated
+  // Filtered out unwanted fields names that are not allowed to be updated, remove empties
   const filteredBody =
     req.route.path === '/me/' &&
     filterObj(
@@ -149,6 +149,52 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// Complete user profile after social login
+// Every user (no matter what login method was used) ends with the same filled profile
+exports.socialComplete = catchAsync(async (req, res, next) => {
+  if (!req.user || req.user.method === 'local') {
+    return next(new AppError('Use social login!', 403));
+  }
+  // There is another way to update user profile
+  // Return error if completed user wants to change something in this way
+  if (req.user.isCompleted) {
+    return next(
+      new AppError(
+        'Your profile is completed. This is not for updating user profile.',
+        403
+      )
+    );
+  }
+
+  // Filtered out unwanted fields names that are not allowed to be updated, remove empties
+  const filteredBody = filterObj(
+    req.body,
+    'name',
+    'gender',
+    'birthDate',
+    'photo',
+    'bio',
+    'country',
+    'city',
+    'isHidden'
+  );
+  // Mark user profile as completed
+  filteredBody.isCompleted = true;
+
+  // Provide the changes
+  const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true
+  });
+  res.status(201).json({
+    status: 'success',
+    message: 'User profile completed',
+    data: {
+      user
+    }
+  });
+});
+
 // Delete (deactivate) user
 // With role user:
 //  - deactivate to hide everything from user and logout
@@ -181,7 +227,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   });
 });
 
-// Only for Admin (all access)
+// Only for Admin (full access)
 
 // Get all users with filtering, sorting, limit fields and pagination (utils/apiFeatures.js)
 exports.getAllUsers = catchAsync(async (req, res, next) => {
@@ -206,7 +252,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   });
 });
 
-// Create new user
+// Create new user with full access
 exports.createUser = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     email: req.body.email,

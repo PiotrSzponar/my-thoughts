@@ -61,47 +61,6 @@ exports.socialSignin = catchAsync(async (req, res, next) => {
   createTokenCookie(req.user, 200, res);
 });
 
-// Complete user profile after social login
-exports.socialComplete = catchAsync(async (req, res, next) => {
-  if (!req.user || req.user.method === 'local') {
-    return next(new AppError('Use social login!', 403));
-  }
-  if (req.user.isCompleted) {
-    return next(
-      new AppError(
-        'Your profile is completed. This is not for updating user profile.',
-        403
-      )
-    );
-  }
-  const user = await User.findOneAndUpdate(
-    {
-      _id: req.user.id
-    },
-    {
-      name: req.body.name || req.user.name,
-      gender: req.body.gender,
-      birthDate: req.body.birthDate,
-      photo: req.body.photo || req.user.photo,
-      bio: req.body.bio,
-      country: req.body.country,
-      city: req.body.city,
-      isCompleted: true
-    },
-    {
-      new: true,
-      runValidators: true
-    }
-  );
-  res.status(201).json({
-    status: 'success',
-    message: 'User profile completed',
-    data: {
-      user
-    }
-  });
-});
-
 // User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
@@ -260,7 +219,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
   // Check if user still exists
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await User.findById(decoded.id).select('+isCompleted');
   if (!currentUser) {
     return next(
       new AppError(
@@ -268,6 +227,13 @@ exports.protect = catchAsync(async (req, res, next) => {
         401
       )
     );
+  }
+
+  // Allow uncompleted user to enter only social-complete form
+  const path = req.route === undefined ? '' : req.route.path;
+  if (!currentUser.isCompleted && path !== '/signup/social-complete') {
+    // Later this should redirect to form, now just error
+    return next(new AppError('Complete user profile!', 401));
   }
 
   // Check if user changed password after the token was issued
