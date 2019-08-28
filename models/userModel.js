@@ -78,6 +78,12 @@ const userSchema = new mongoose.Schema({
   city: {
     type: String
   },
+  Friends: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Friends'
+    }
+  ],
   isVerified: {
     type: Boolean,
     default: false,
