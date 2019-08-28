@@ -8,7 +8,7 @@ const AppError = require('./../utils/appError');
 const isValidID = id => ObjectID.isValid(id);
 
 // send friend request e.g route: /api/friends/request-friend?recipient="recpipient id"
-exports.requestFriend = catchAsync(async (req, res, next) => {
+exports.requestToFriends = catchAsync(async (req, res, next) => {
   // check if id isvalid, isFriend doesn't handle that
   if (!isValidID(req.query.recipient)) {
     return next(new AppError('No user found', 404));
@@ -62,15 +62,15 @@ exports.requestFriend = catchAsync(async (req, res, next) => {
 });
 
 // accept friend request e.g route: /api/friends/accept-friend?requester="requester id"
-exports.acceptFriend = catchAsync(async (req, res, next) => {
+exports.acceptToFriends = catchAsync(async (req, res, next) => {
   if (!isValidID(req.query.requester)) {
     return next(new AppError('No user found', 404));
   }
 
   //add when user deleted, remove also friends relations
   const isFriend = await Friend.find({
-    requester: req.user._id,
-    recipient: req.query.requester,
+    requester: req.query.requester,
+    recipient: req.user._id,
     status: 3
   });
 
@@ -91,53 +91,46 @@ exports.acceptFriend = catchAsync(async (req, res, next) => {
     { new: true }
   );
 
-  const data = await Friend.find();
-
   res.status(200).json({
     status: 'success',
-    message: 'You are friends now',
-    data: {
-      data
-    }
+    message: 'You are friends now'
   });
 });
 
-exports.rejectFriend = catchAsync(async (req, res, next) => {
+exports.deletefromFriends = catchAsync(async (req, res, next) => {
   if (!isValidID(req.query.requester)) {
     return next(new AppError('No user found', 404));
   }
 
-  const docA = await Friend.findOneAndUpdate({
+  const docA = await Friend.findOneAndRemove({
     requester: req.user._id,
-    recipient: req.query.recipient
+    recipient: req.query.requester
   });
 
-  const docB = await Friend.findOneAndUpdate({
+  const docB = await Friend.findOneAndRemove({
     recipient: req.user._id,
-    requester: req.query.recipient
+    requester: req.query.requester
   });
 
-  if (!docA || !docB) {
-    next(new AppError('You are not friends', 404));
+  // if friends not find
+  if (docA === null || docB === null) {
+    return next(new AppError('You are not friends', 404));
   }
 
   await User.findOneAndUpdate(
     { _id: req.user._id },
-    { $pull: { Friends: docA._id } }
+    { $pull: { Friends: docA._id } },
+    { new: true }
   );
 
   await User.findOneAndUpdate(
-    { _id: req.query.recipient },
-    { $pull: { Friends: docB._id } }
+    { _id: req.query.requester },
+    { $pull: { Friends: docB._id } },
+    { new: true }
   );
-
-  const data = await Friend.find();
 
   res.status(200).json({
     status: 'success',
-    message: 'You are not friends now',
-    data: {
-      data
-    }
+    message: 'You are not friends now'
   });
 });
