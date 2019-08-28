@@ -9,6 +9,9 @@ router.use(protect);
 
 router.get('/request-friend', friendController.requestFriend);
 router.get('/accept-friend', friendController.acceptFriend);
+
+// remove works same as reject
 router.get('/reject-friend', friendController.rejectFriend);
+router.get('/remove-friend', friendController.rejectFriend);
 
 module.exports = router;
