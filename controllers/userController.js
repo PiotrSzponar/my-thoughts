@@ -80,10 +80,10 @@ exports.search = catchAsync(async (req, res, next) => {
 exports.getUser = catchAsync(async (req, res, next) => {
   const searchedUser =
     req.user.role === 'admin' && req.route.path !== '/me/'
-      ? await User.findById(req.params.id).select(
-          '+isHidden +isVerified +isActive'
-        )
-      : await User.findById(req.user.id);
+      ? await User.findById(req.params.id)
+          .populate('Friends')
+          .select('+isHidden +isVerified +isActive')
+      : await User.findById(req.user.id).populate('Friends');
 
   if (!searchedUser) {
     return next(new AppError('No user found', 404));
@@ -186,9 +186,9 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
 // Get all users with filtering, sorting, limit fields and pagination (utils/apiFeatures.js)
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
-    User.find().select(
-      `${!req.query.fields && '+isHidden +isVerified +isActive'}`
-    ),
+    User.find()
+      .populate('Friends')
+      .select(`${!req.query.fields && '+isHidden +isVerified +isActive'}`),
     req.query
   )
     .filter()
