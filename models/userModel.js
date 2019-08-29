@@ -81,7 +81,7 @@ const userSchema = new mongoose.Schema({
   Friends: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Friends'
+      ref: 'Friend'
     }
   ],
   isVerified: {
