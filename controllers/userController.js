@@ -81,7 +81,7 @@ exports.search = catchAsync(async (req, res, next) => {
 //  - get user id from params and show all info about user
 exports.getUser = catchAsync(async (req, res, next) => {
   const searchedUser =
-    req.user.role === 'admin' && req.route.path !== '/me/'
+    req.user.role === 'admin' && req.route.path !== '/me'
       ? await User.findById(req.params.id).select(
           '+isHidden +isVerified +isActive +isCompleted'
         )
@@ -107,7 +107,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
 exports.updateUser = catchAsync(async (req, res, next) => {
   // Create error if user POSTs password data
   if (
-    req.route.path === '/me/' &&
+    req.route.path === '/me' &&
     (req.body.password || req.body.passwordConfirm)
   ) {
     return next(new AppError('This route is not for password updates.', 400));
@@ -115,7 +115,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
   // Filtered out unwanted fields names that are not allowed to be updated, remove empties
   const filteredBody =
-    req.route.path === '/me/' &&
+    req.route.path === '/me' &&
     filterObj(
       req.body,
       'gender',
@@ -129,7 +129,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
   // Update user document and returned the new one
   const updatedUser =
-    req.user.role === 'admin' && req.route.path !== '/me/'
+    req.user.role === 'admin' && req.route.path !== '/me'
       ? await User.findByIdAndUpdate(req.params.id, req.body, {
           new: true,
           runValidators: true
@@ -217,11 +217,11 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   let user = null;
 
   // Check if admin wants to delete/deactivate himself
-  if (req.user.role === 'admin' && req.route.path === '/me/') {
+  if (req.user.role === 'admin' && req.route.path === '/me') {
     return next(new AppError('Can not delete/deactivate admin', 400));
   }
 
-  if (req.user.role === 'admin' && req.route.path !== '/me/') {
+  if (req.user.role === 'admin' && req.route.path !== '/me') {
     user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
       return next(new AppError('No user found with that ID', 404));
@@ -268,6 +268,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 // Create new user with full access
 exports.createUser = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
+    method: req.body.method,
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
@@ -281,7 +282,8 @@ exports.createUser = catchAsync(async (req, res, next) => {
     role: req.body.role,
     isVerified: req.body.isVerified,
     isHidden: req.body.isHidden,
-    isActive: req.body.isActive
+    isActive: req.body.isActive,
+    isCompleted: req.body.isCompleted
   });
 
   res.status(201).json({

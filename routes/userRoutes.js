@@ -80,7 +80,7 @@ router.get('/search', userController.search);
 
 // Operations on logged in user
 router
-  .route('/me/')
+  .route('/me')
   .get(userController.getUser)
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
@@ -90,6 +90,8 @@ router.patch(
   authController.updatePasswordValidator,
   authController.updatePassword
 );
+
+router.get('/:id', userController.getUser);
 
 // After this MW - only for Admin
 router.use(authController.restrictTo('admin'));
@@ -103,7 +105,6 @@ router
 // Operations on provided user
 router
   .route('/:id')
-  .get(userController.getUser)
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
 
