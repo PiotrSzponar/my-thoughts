@@ -27,11 +27,12 @@ router.get(
 router.patch(
   '/signup/social-complete',
   authController.protect,
+  authController.socialCompleteValidator,
   userController.socialComplete
 );
 
 // User Sign Up (local)
-router.post('/signup', authController.signup);
+router.post('/signup', authController.signupValidator, authController.signup);
 
 // Verify user email address
 router.patch('/verification/:token', authController.verification);
@@ -47,7 +48,11 @@ router.get('/signout', authController.signout);
 // Forgot password: provide user email and get the message...
 router.post('/forgot-password', authController.forgotPassword);
 // ...with token that confirm user. Then change password.
-router.patch('/reset-password/:token', authController.resetPassword);
+router.patch(
+  '/reset-password/:token',
+  authController.updatePasswordValidator,
+  authController.resetPassword
+);
 
 // After this MW - only for logged in users
 router.use(authController.protect);
@@ -62,7 +67,11 @@ router
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
 // Separate path to change password
-router.patch('/me/change-password', authController.updatePassword);
+router.patch(
+  '/me/change-password',
+  authController.updatePasswordValidator,
+  authController.updatePassword
+);
 
 // After this MW - only for Admin
 router.use(authController.restrictTo('admin'));

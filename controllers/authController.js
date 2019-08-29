@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
 
 const User = require('../models/userModel');
 const Email = require('../utils/email');
@@ -63,6 +64,19 @@ exports.socialSignin = catchAsync(async (req, res, next) => {
 
 // User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
+
   const newUser = await User.create({
     method: 'local',
     email: req.body.email,
@@ -293,6 +307,18 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   if (user.method !== 'local') {
     return next(new AppError('User used social login', 400));
   }
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
   // Change password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -315,6 +341,19 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     return next(new AppError('User used social login', 400));
   }
 
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
+
   // Check if POSTed current password is correct
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
     return next(new AppError('Your current password is wrong.', 401));
@@ -332,3 +371,80 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     message: 'Password has been changed'
   });
 });
+
+// Validators
+
+exports.signupValidator = [
+  body('email', 'Please provide valid email.')
+    .not()
+    .isEmpty()
+    .trim()
+    .isEmail()
+    .normalizeEmail(),
+  body('password')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide a password.')
+    .custom(value =>
+      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(value)
+    )
+    .withMessage(
+      'Password should contain: min 8 characters, at least one lower and upper case letter, one number and one special character.'
+    ),
+  body('passwordConfirm')
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage('Passwords have to match.'),
+  body('name')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your name.')
+    .isLength({ max: 50 })
+    .withMessage('Max length of name is 50 characters.')
+    .trim(),
+  body('birthDate')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your birth date.')
+    .isBefore()
+    .withMessage('Please provide a valid birth date (should be in the past).'),
+  body('gender')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your gender.')
+];
+
+exports.socialCompleteValidator = [
+  body('name')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your name.')
+    .isLength({ max: 50 })
+    .withMessage('Max length of name is 50 characters.')
+    .trim(),
+  body('birthDate')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your birth date.')
+    .isBefore()
+    .withMessage('Please provide a valid birth date (should be in the past).'),
+  body('gender')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your gender.')
+];
+
+exports.updatePasswordValidator = [
+  body('password')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide a password.')
+    .custom(value =>
+      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(value)
+    )
+    .withMessage(
+      'Password should contain: min 8 characters, at least one lower and upper case letter, one number and one special character.'
+    ),
+  body('passwordConfirm')
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage('Passwords have to match.')
+];

@@ -1,3 +1,5 @@
+const { validationResult } = require('express-validator');
+
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
@@ -81,7 +83,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const searchedUser =
     req.user.role === 'admin' && req.route.path !== '/me/'
       ? await User.findById(req.params.id).select(
-          '+isHidden +isVerified +isActive'
+          '+isHidden +isVerified +isActive +isCompleted'
         )
       : await User.findById(req.user.id);
 
@@ -165,7 +167,18 @@ exports.socialComplete = catchAsync(async (req, res, next) => {
       )
     );
   }
-
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
   // Filtered out unwanted fields names that are not allowed to be updated, remove empties
   const filteredBody = filterObj(
     req.body,
