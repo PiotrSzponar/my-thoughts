@@ -23,6 +23,24 @@ router.get(
   authController.socialSignin
 );
 
+// Facebook Auth
+router.get(
+  '/signup/facebook',
+  passport.authenticate('facebook', {
+    session: false,
+    scope: 'email'
+  })
+);
+// Success Facebook login
+router.get(
+  '/signup/facebook/redirect',
+  passport.authenticate('facebook', {
+    session: false,
+    failureRedirect: '../facebook'
+  }),
+  authController.socialSignin
+);
+
 // Profile complement after first google/facebook login (isCompleted: false -> true)
 router.patch(
   '/signup/social-complete',

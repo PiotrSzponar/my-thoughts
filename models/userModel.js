@@ -91,9 +91,12 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-// Return only active users when using 'find' methods
-userSchema.pre(/^find/, function(next) {
-  this.find({ active: { $ne: false } });
+// Return only active and completed users when using 'find' methods
+userSchema.pre(/^find/, async function(next) {
+  this.find({
+    isActive: { $ne: false },
+    isCompleted: { $ne: false }
+  });
   next();
 });
 

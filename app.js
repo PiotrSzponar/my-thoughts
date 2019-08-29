@@ -13,7 +13,7 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const userRouter = require('./routes/userRoutes');
 
-const passportSetup = require('./utils/initPassword');
+const passportSetup = require('./utils/initPassport');
 
 const app = express();
 

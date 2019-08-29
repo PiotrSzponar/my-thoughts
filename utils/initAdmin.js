@@ -14,7 +14,8 @@ module.exports = async () => {
       gender: 'other',
       birthDate: new Date().toISOString().substring(0, 10),
       isVerified: true,
-      isHidden: true
+      isHidden: true,
+      isCompleted: true
     });
     console.log('Default Administrator has been created');
   }
