@@ -1,3 +1,5 @@
+const { validationResult } = require('express-validator');
+
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
@@ -79,9 +81,9 @@ exports.search = catchAsync(async (req, res, next) => {
 //  - get user id from params and show all info about user
 exports.getUser = catchAsync(async (req, res, next) => {
   const searchedUser =
-    req.user.role === 'admin' && req.route.path !== '/me/'
+    req.user.role === 'admin' && req.route.path !== '/me'
       ? await User.findById(req.params.id).select(
-          '+isHidden +isVerified +isActive'
+          '+isHidden +isVerified +isActive +isCompleted'
         )
       : await User.findById(req.user.id);
 
@@ -105,15 +107,15 @@ exports.getUser = catchAsync(async (req, res, next) => {
 exports.updateUser = catchAsync(async (req, res, next) => {
   // Create error if user POSTs password data
   if (
-    req.route.path === '/me/' &&
+    req.route.path === '/me' &&
     (req.body.password || req.body.passwordConfirm)
   ) {
     return next(new AppError('This route is not for password updates.', 400));
   }
 
-  // Filtered out unwanted fields names that are not allowed to be updated
+  // Filtered out unwanted fields names that are not allowed to be updated, remove empties
   const filteredBody =
-    req.route.path === '/me/' &&
+    req.route.path === '/me' &&
     filterObj(
       req.body,
       'gender',
@@ -127,7 +129,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
 
   // Update user document and returned the new one
   const updatedUser =
-    req.user.role === 'admin' && req.route.path !== '/me/'
+    req.user.role === 'admin' && req.route.path !== '/me'
       ? await User.findByIdAndUpdate(req.params.id, req.body, {
           new: true,
           runValidators: true
@@ -149,6 +151,63 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// Complete user profile after social login
+// Every user (no matter what login method was used) ends with the same filled profile
+exports.socialComplete = catchAsync(async (req, res, next) => {
+  if (!req.user || req.user.method === 'local') {
+    return next(new AppError('Use social login!', 403));
+  }
+  // There is another way to update user profile
+  // Return error if completed user wants to change something in this way
+  if (req.user.isCompleted) {
+    return next(
+      new AppError(
+        'Your profile is completed. This is not for updating user profile.',
+        403
+      )
+    );
+  }
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
+  // Filtered out unwanted fields names that are not allowed to be updated, remove empties
+  const filteredBody = filterObj(
+    req.body,
+    'name',
+    'gender',
+    'birthDate',
+    'photo',
+    'bio',
+    'country',
+    'city',
+    'isHidden'
+  );
+  // Mark user profile as completed
+  filteredBody.isCompleted = true;
+
+  // Provide the changes
+  const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
+    new: true,
+    runValidators: true
+  });
+  res.status(201).json({
+    status: 'success',
+    message: 'User profile completed',
+    data: {
+      user
+    }
+  });
+});
+
 // Delete (deactivate) user
 // With role user:
 //  - deactivate to hide everything from user and logout
@@ -158,11 +217,11 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   let user = null;
 
   // Check if admin wants to delete/deactivate himself
-  if (req.user.role === 'admin' && req.route.path === '/me/') {
+  if (req.user.role === 'admin' && req.route.path === '/me') {
     return next(new AppError('Can not delete/deactivate admin', 400));
   }
 
-  if (req.user.role === 'admin' && req.route.path !== '/me/') {
+  if (req.user.role === 'admin' && req.route.path !== '/me') {
     user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
       return next(new AppError('No user found with that ID', 404));
@@ -181,7 +240,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   });
 });
 
-// Only for Admin (all access)
+// Only for Admin (full access)
 
 // Get all users with filtering, sorting, limit fields and pagination (utils/apiFeatures.js)
 exports.getAllUsers = catchAsync(async (req, res, next) => {
@@ -206,9 +265,10 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   });
 });
 
-// Create new user
+// Create new user with full access
 exports.createUser = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
+    method: req.body.method,
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
@@ -222,7 +282,8 @@ exports.createUser = catchAsync(async (req, res, next) => {
     role: req.body.role,
     isVerified: req.body.isVerified,
     isHidden: req.body.isHidden,
-    isActive: req.body.isActive
+    isActive: req.body.isActive,
+    isCompleted: req.body.isCompleted
   });
 
   res.status(201).json({

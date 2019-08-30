@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
 
 const User = require('../models/userModel');
 const Email = require('../utils/email');
@@ -28,6 +29,8 @@ const createTokenCookie = (user, statusCode, res) => {
   // Remove password and isVerified from output
   user.password = undefined;
   user.isVerified = undefined;
+  user.isActive = undefined;
+  user.isCompleted = undefined;
 
   res.status(statusCode).json({
     status: 'success',
@@ -37,8 +40,9 @@ const createTokenCookie = (user, statusCode, res) => {
     }
   });
 };
+exports.createTokenCookie = createTokenCookie;
 
-// Check if user has required role
+// Check if user has required field
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     // array ['admin', 'moderator'] or string role='admin'
@@ -51,9 +55,30 @@ exports.restrictTo = (...roles) => {
   };
 };
 
+exports.socialSignin = catchAsync(async (req, res, next) => {
+  if (!req.user) {
+    return next(new AppError('Use social login!', 403));
+  }
+  createTokenCookie(req.user, 200, res);
+});
+
 // User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
+
   const newUser = await User.create({
+    method: 'local',
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
@@ -63,7 +88,8 @@ exports.signup = catchAsync(async (req, res, next) => {
     photo: req.body.photo,
     bio: req.body.bio,
     country: req.body.country,
-    city: req.body.city
+    city: req.body.city,
+    isCompleted: true
   });
 
   const verificationToken = signToken(
@@ -105,6 +131,11 @@ exports.verification = catchAsync(async (req, res, next) => {
   if (user.isVerified) {
     return next(new AppError('This user has already been verified', 400));
   }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
+  }
+
   user.isVerified = true;
   await user.save({ validateBeforeSave: false });
 
@@ -124,6 +155,10 @@ exports.resendVerification = catchAsync(async (req, res, next) => {
   }
   if (user.isVerified) {
     return next(new AppError('This user has already been verified', 400));
+  }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
   }
 
   const verificationToken = signToken(
@@ -166,6 +201,10 @@ exports.signin = catchAsync(async (req, res, next) => {
   if (!user.isVerified) {
     return next(new AppError('User is not verified', 400));
   }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
+  }
 
   createTokenCookie(user, 200, res);
 });
@@ -194,7 +233,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
   // Check if user still exists
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await User.findById(decoded.id).select('+isCompleted');
   if (!currentUser) {
     return next(
       new AppError(
@@ -202,6 +241,13 @@ exports.protect = catchAsync(async (req, res, next) => {
         401
       )
     );
+  }
+
+  // Allow uncompleted user to enter only social-complete form
+  const path = req.route === undefined ? '' : req.route.path;
+  if (!currentUser.isCompleted && path !== '/signup/social-complete') {
+    // Later this should redirect to form, now just error
+    return next(new AppError('Complete user profile!', 401));
   }
 
   // Check if user changed password after the token was issued
@@ -225,6 +271,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
   if (user) {
     if (!user.isVerified) {
       return next(new AppError('User is not verified', 400));
+    }
+    // Check if user used local login method
+    if (user.method !== 'local') {
+      return next(new AppError('User used social login', 400));
     }
     // Generate token
     const resetToken = signToken(user._id, process.env.JWT_RESET_EXPIRES_IN);
@@ -253,6 +303,22 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(new AppError('Token is invalid or has expired', 400));
   }
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
+  }
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
   // Change password
   user.password = req.body.password;
   user.passwordConfirm = req.body.passwordConfirm;
@@ -269,6 +335,24 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 exports.updatePassword = catchAsync(async (req, res, next) => {
   // Get user from collection
   const user = await User.findById(req.user.id).select('+password');
+
+  // Check if user used local login method
+  if (user.method !== 'local') {
+    return next(new AppError('User used social login', 400));
+  }
+
+  // Validation errors
+  if (!validationResult(req).isEmpty()) {
+    return next(
+      new AppError(
+        'Validation failed!',
+        422,
+        validationResult(req)
+          .formatWith(({ msg }) => msg)
+          .mapped()
+      )
+    );
+  }
 
   // Check if POSTed current password is correct
   if (!(await user.correctPassword(req.body.passwordCurrent, user.password))) {
@@ -287,3 +371,80 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
     message: 'Password has been changed'
   });
 });
+
+// Validators
+
+exports.signupValidator = [
+  body('email', 'Please provide valid email.')
+    .not()
+    .isEmpty()
+    .trim()
+    .isEmail()
+    .normalizeEmail(),
+  body('password')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide a password.')
+    .custom(value =>
+      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(value)
+    )
+    .withMessage(
+      'Password should contain: min 8 characters, at least one lower and upper case letter, one number and one special character.'
+    ),
+  body('passwordConfirm')
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage('Passwords have to match.'),
+  body('name')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your name.')
+    .isLength({ max: 50 })
+    .withMessage('Max length of name is 50 characters.')
+    .trim(),
+  body('birthDate')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your birth date.')
+    .isBefore()
+    .withMessage('Please provide a valid birth date (should be in the past).'),
+  body('gender')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your gender.')
+];
+
+exports.socialCompleteValidator = [
+  body('name')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your name.')
+    .isLength({ max: 50 })
+    .withMessage('Max length of name is 50 characters.')
+    .trim(),
+  body('birthDate')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your birth date.')
+    .isBefore()
+    .withMessage('Please provide a valid birth date (should be in the past).'),
+  body('gender')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide your gender.')
+];
+
+exports.updatePasswordValidator = [
+  body('password')
+    .not()
+    .isEmpty()
+    .withMessage('Please provide a password.')
+    .custom(value =>
+      /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(value)
+    )
+    .withMessage(
+      'Password should contain: min 8 characters, at least one lower and upper case letter, one number and one special character.'
+    ),
+  body('passwordConfirm')
+    .custom((value, { req }) => value === req.body.password)
+    .withMessage('Passwords have to match.')
+];
