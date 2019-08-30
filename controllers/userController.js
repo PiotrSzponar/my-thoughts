@@ -83,7 +83,10 @@ exports.getUser = catchAsync(async (req, res, next) => {
       ? await User.findById(req.params.id)
           .populate('Friends')
           .select('+isHidden +isVerified +isActive')
-      : await User.findById(req.user.id).populate('Friends');
+      : await User.findById(req.user.id).populate({
+          path: 'Friends',
+          options: { sort: { createdAt: 'desc' }, limit: 50 }
+        });
 
   if (!searchedUser) {
     return next(new AppError('No user found', 404));

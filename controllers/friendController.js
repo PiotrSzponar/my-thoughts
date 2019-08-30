@@ -20,6 +20,8 @@ exports.requestToFriends = catchAsync(async (req, res, next) => {
     recipient: req.query.recipient
   });
 
+  if (req.query.recipient === req.user._id.toString())
+    return next(new AppError("You can't add yourself to friends", 401));
   // check status
   if (isFriend && isFriend.status === 3)
     return next(new AppError('This User is your friend', 401));
@@ -36,11 +38,6 @@ exports.requestToFriends = catchAsync(async (req, res, next) => {
 
   if (!recipient.isVerified)
     return next(new AppError('User you want to invite is not verified', 400));
-
-  if (recipient.Friends.length > 50)
-    return next(
-      new AppError("Can't inivite new friend, friends limit is 50", 404)
-    );
 
   const docA = await Friend.findOneAndUpdate(
     { requester: req.user._id, recipient: req.query.recipient },
@@ -66,11 +63,11 @@ exports.requestToFriends = catchAsync(async (req, res, next) => {
 
   const acceptURL = `${req.protocol}://${req.get(
     'host'
-  )}/api/friends/accept-friend?requester=${req.user._id}`;
+  )}/api/friends/accept?requester=${req.user._id}`;
 
   const rejectURL = `${req.protocol}://${req.get(
     'host'
-  )}/api/friends/reject-friend?requester=${req.user._id}`;
+  )}/api/friends/reject?requester=${req.user._id}`;
 
   await new Email(req.user, '', {
     state: 'pending',
@@ -85,21 +82,28 @@ exports.requestToFriends = catchAsync(async (req, res, next) => {
   });
 });
 
-// accept friend request e.g route: /api/friends/accept-friend?requester="requester id"
+// accept friend request e.g route: /api/friends/accept?requester="requester id"
 exports.acceptToFriends = catchAsync(async (req, res, next) => {
   if (!isValidID(req.query.requester))
     return next(new AppError('No user found', 404));
 
-  //add when user deleted, remove also friends relations
-  const isFriend = await Friend.find({
+  if (req.query.recipient === req.user._id.toString())
+    return next(new AppError("You can't accept your invitation", 401));
+
+  const isFriend = await Friend.findOne({
     requester: req.query.requester,
     recipient: req.user._id,
-    status: 3
+    $or: [{ status: 3 }, { status: 2 }, { status: 1 }]
   });
 
   // check status
-  if (isFriend.length)
+  if (isFriend && isFriend.status === 3)
     return next(new AppError('This User is already your friend', 401));
+
+  if (isFriend && isFriend.status === 2)
+    return next(new AppError('Invalid action', 401));
+
+  if (isFriend === null) return next(new AppError('no friend invitation', 401));
 
   await Friend.findOneAndUpdate(
     { requester: req.query.requester, recipient: req.user._id },
@@ -113,11 +117,11 @@ exports.acceptToFriends = catchAsync(async (req, res, next) => {
     { new: true }
   );
 
-  const requester = await Friend.findOne({ _id: req.query.requester });
+  const { name } = await User.findOne({ _id: req.query.requester });
 
-  await new Email(requester, '', {
+  await new Email(req.user, '', {
     status: 'accepted',
-    name: requester.name
+    name
   }).sendFriendInformation();
 
   res.status(200).json({
@@ -126,23 +130,26 @@ exports.acceptToFriends = catchAsync(async (req, res, next) => {
   });
 });
 
+// accept friend request e.g route: /api/friends/reject?requester="requester id"
 exports.deletefromFriends = catchAsync(async (req, res, next) => {
   if (!isValidID(req.query.requester))
     return next(new AppError('No user found', 404));
 
-  const docA = await Friend.findOneAndRemove({
+  if (req.query.recipient === req.user._id.toString())
+    return next(new AppError("You can't accept your invitation", 401));
+
+  const docA = await Friend.findOne({
     requester: req.user._id,
     recipient: req.query.requester
   });
 
-  const docB = await Friend.findOneAndRemove({
+  const docB = await Friend.findOne({
     recipient: req.user._id,
     requester: req.query.requester
   });
 
-  // if friends not found
   if (docA === null || docB === null)
-    return next(new AppError('You are not friends', 404));
+    return next(new AppError('You are not friends', 401));
 
   await User.findOneAndUpdate(
     { _id: req.user._id },
@@ -156,17 +163,21 @@ exports.deletefromFriends = catchAsync(async (req, res, next) => {
     { new: true }
   );
 
-  const requester = await Friend.findOne({ _id: req.query.requester });
+  await docA.remove();
+  await docB.remove();
+
+  const { name } = await User.findOne({ _id: req.query.requester });
 
   let message = 'You are not friends from now';
   // only sent information when user rejects request
-  if (req.route.path === '/reject-friend') {
-    message = 'invite successfuly rejected';
-    await new Email(requester, '', {
+  if (req.route.path === '/reject') {
+    message = 'invite successfully rejected';
+    await new Email(req.user, '', {
       status: 'rejected',
-      name: requester.name
+      name
     }).sendFriendInformation();
   }
+
   res.status(200).json({
     status: 'success',
     message

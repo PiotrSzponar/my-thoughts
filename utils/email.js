@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 module.exports = class Email {
-  constructor(user, url, info = {}) {
+  constructor(user, url, info = undefined) {
     this.to = user.email;
     this.name = user.name;
     this.info = info;
@@ -93,11 +93,11 @@ module.exports = class Email {
 
   async sendFriendInformation() {
     await this.send(
-      'Friend inivitation info',
+      'My thoughts friend invitation informations',
       `
       <center>
       <h1>.::My Thoughts::.</h1>
-      <h3>Welcome ${this.name}! Your invitation has been ${this.info.state}</h3>
+      <h3>Welcome ${this.name}! Your invitation to ${this.info.name} has been ${this.info.status}</h3>
       <br>
       <hr>
       <p>If you didn't request this, please ignore this email.</p>
@@ -108,12 +108,12 @@ module.exports = class Email {
 
   async sendFriendInvitation() {
     await this.send(
-      'Friend invitation',
+      'My thoughts friend invitation informations',
       `
       <center>
       <h1>.::My Thoughts::.</h1>
       <h3>Welcome ${this.name}! You have new invitation</h3>
-      <p>${this.info.name} Wants to be your friend</p>
+      <p>${this.info.name} wants to be your friend</p>
       <p><a href="${this.info.accept}">ACCEPT!</a></p>
       <p><a href="${this.info.reject}">DECLINE!</a></p>
       <br>

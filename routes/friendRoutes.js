@@ -7,11 +7,11 @@ const router = express.Router();
 // After this MW - only for logged in users
 router.use(protect);
 
-router.get('/request-friend', friendController.requestToFriends);
-router.get('/accept-friend', friendController.acceptToFriends);
+router.post('/request', friendController.requestToFriends);
+router.post('/accept', friendController.acceptToFriends);
 
 // remove works same as reject
-router.get('/reject-friend', friendController.deletefromFriends);
-router.get('/delete-friend', friendController.deletefromFriends);
+router.post('/reject', friendController.deletefromFriends);
 
+//get user friends
 module.exports = router;
