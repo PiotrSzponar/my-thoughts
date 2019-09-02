@@ -12,7 +12,11 @@ const multerFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+  limits: { fileSize: 1000000 }
+});
 
 exports.uploadUserPhoto = upload.single('photo');
 

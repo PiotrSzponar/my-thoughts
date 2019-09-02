@@ -115,6 +115,7 @@ userSchema.pre('save', function(next) {
   next();
 });
 
+// Save user photo from socials
 userSchema.pre('save', function(next) {
   if (
     !this.isModified('photo') ||
