@@ -5,6 +5,7 @@ module.exports = async () => {
   const user = await User.findOne({ role: 'admin' });
   if (!user) {
     User.create({
+      method: 'local',
       role: 'admin',
       email: process.env.ADMIN_EMAIL,
       password: process.env.ADMIN_PASSWORD,
@@ -13,7 +14,8 @@ module.exports = async () => {
       gender: 'other',
       birthDate: new Date().toISOString().substring(0, 10),
       isVerified: true,
-      isHidden: true
+      isHidden: true,
+      isCompleted: true
     });
     console.log('Default Administrator has been created');
   }

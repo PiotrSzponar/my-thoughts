@@ -6,6 +6,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xssClean = require('xss-clean');
 const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
+const passport = require('passport');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -13,7 +14,11 @@ const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoutes');
 const friendRouter = require('./routes/friendRoutes');
 
+const passportSetup = require('./utils/initPassport');
+
 const app = express();
+
+app.use(passport.initialize());
 
 // GLOBAL MIDDLEWARES
 
