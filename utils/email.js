@@ -115,7 +115,7 @@ module.exports = class Email {
       <h3>Welcome ${this.name}! You have new invitation</h3>
       <p>${this.info.name} wants to be your friend</p>
       <p><a href="${this.info.accept}">ACCEPT!</a></p>
-      <p><a href="${this.info.reject}">DECLINE!</a></p>
+      <p><a href="${this.info.reject}">REJECT!</a></p>
       <br>
       <hr>
       <p>If you didn't request this, please ignore this email.</p>
