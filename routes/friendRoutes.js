@@ -8,10 +8,10 @@ const router = express.Router();
 router.use(authController.protect);
 
 router.post('/request', friendController.requestToFriends);
-router.post('/accept', friendController.acceptToFriends);
+router.patch('/accept', friendController.acceptToFriends);
 
 // remove works same as reject
-router.post('/reject', friendController.deletefromFriends);
+router.delete('/reject', friendController.deletefromFriends);
 
 //get user friends
 router.get('/:id', friendController.getUserFriends);
