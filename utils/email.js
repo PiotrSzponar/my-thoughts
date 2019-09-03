@@ -93,7 +93,7 @@ module.exports = class Email {
 
   async sendFriendInformation() {
     await this.send(
-      'My thoughts friend invitation informations',
+      `My Thoughts - ${this.info.name} has ${this.info.status} your invitation to become friends!`,
       `
       <center>
       <h1>.::My Thoughts::.</h1>
@@ -108,7 +108,7 @@ module.exports = class Email {
 
   async sendFriendInvitation() {
     await this.send(
-      'My thoughts friend invitation informations',
+      `My Thoughts - ${this.info.name} has sent you invitation to become friends!`,
       `
       <center>
       <h1>.::My Thoughts::.</h1>

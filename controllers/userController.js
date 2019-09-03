@@ -81,10 +81,10 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const searchedUser =
     req.user.role === 'admin' && req.route.path !== '/me/'
       ? await User.findById(req.params.id)
-          .populate('Friends')
+          .populate('friends')
           .select('+isHidden +isVerified +isActive')
       : await User.findById(req.user.id).populate({
-          path: 'Friends',
+          path: 'friends',
           options: { sort: { createdAt: 'desc' }, limit: 50 }
         });
 
@@ -190,7 +190,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
     User.find()
-      .populate('Friends')
+      .populate('friends')
       .select(`${!req.query.fields && '+isHidden +isVerified +isActive'}`),
     req.query
   )

@@ -8,7 +8,7 @@ const AppError = require('./../utils/appError');
 
 const isValidID = id => ObjectID.isValid(id);
 
-// send friend request e.g route: /api/friends/request-friend?recipient="recpipient id"
+// send friend request e.g route: /api/friends/request?recipient="recpipient id"
 exports.requestToFriends = catchAsync(async (req, res, next) => {
   // check if provided query is ObjectID
   if (!isValidID(req.query.recipient))
@@ -21,16 +21,16 @@ exports.requestToFriends = catchAsync(async (req, res, next) => {
   });
 
   if (req.query.recipient === req.user._id.toString())
-    return next(new AppError("You can't add yourself to friends", 401));
+    return next(new AppError("You can't add yourself to friends", 403));
   // check status
   if (isFriend && isFriend.status === 3)
-    return next(new AppError('This User is your friend', 401));
+    return next(new AppError('This User is your friend', 403));
 
   if (isFriend && isFriend.status === 2)
-    return next(new AppError('This User has invited you to friends', 401));
+    return next(new AppError('This User has invited you to friends', 403));
 
   if (isFriend && isFriend.status === 1)
-    return next(new AppError('You already send an invitation', 401));
+    return next(new AppError('You already sent an invitation', 403));
 
   const recipient = await User.findOne({ _id: req.query.recipient }).select(
     '+isVerified'
@@ -53,12 +53,12 @@ exports.requestToFriends = catchAsync(async (req, res, next) => {
 
   await User.findOneAndUpdate(
     { _id: req.user._id },
-    { $push: { Friends: docA._id } }
+    { $push: { friends: docA._id } }
   );
 
   await User.findOneAndUpdate(
     { _id: req.query.recipient },
-    { $push: { Friends: docB._id } }
+    { $push: { friends: docB._id } }
   );
 
   const acceptURL = `${req.protocol}://${req.get(
@@ -69,9 +69,9 @@ exports.requestToFriends = catchAsync(async (req, res, next) => {
     'host'
   )}/api/friends/reject?requester=${req.user._id}`;
 
-  await new Email(req.user, '', {
+  await new Email(recipient, '', {
     state: 'pending',
-    name: recipient.name,
+    name: req.user.name,
     accept: acceptURL,
     reject: rejectURL
   }).sendFriendInvitation();
@@ -88,7 +88,7 @@ exports.acceptToFriends = catchAsync(async (req, res, next) => {
     return next(new AppError('No user found', 404));
 
   if (req.query.recipient === req.user._id.toString())
-    return next(new AppError("You can't accept your invitation", 401));
+    return next(new AppError("You can't accept your invitation", 403));
 
   const isFriend = await Friend.findOne({
     requester: req.query.requester,
@@ -98,12 +98,12 @@ exports.acceptToFriends = catchAsync(async (req, res, next) => {
 
   // check status
   if (isFriend && isFriend.status === 3)
-    return next(new AppError('This User is already your friend', 401));
+    return next(new AppError('This User is already your friend', 403));
 
   if (isFriend && isFriend.status === 2)
-    return next(new AppError('Invalid action', 401));
+    return next(new AppError('Invalid action', 403));
 
-  if (isFriend === null) return next(new AppError('no friend invitation', 401));
+  if (isFriend === null) return next(new AppError('no friend invitation', 403));
 
   await Friend.findOneAndUpdate(
     { requester: req.query.requester, recipient: req.user._id },
@@ -117,11 +117,11 @@ exports.acceptToFriends = catchAsync(async (req, res, next) => {
     { new: true }
   );
 
-  const { name } = await User.findOne({ _id: req.query.requester });
+  const requester = await User.findOne({ _id: req.query.requester });
 
-  await new Email(req.user, '', {
+  await new Email(requester, '', {
     status: 'accepted',
-    name
+    name: req.user.name
   }).sendFriendInformation();
 
   res.status(200).json({
@@ -136,7 +136,7 @@ exports.deletefromFriends = catchAsync(async (req, res, next) => {
     return next(new AppError('No user found', 404));
 
   if (req.query.recipient === req.user._id.toString())
-    return next(new AppError("You can't accept your invitation", 401));
+    return next(new AppError("You can't accept your invitation", 403));
 
   const docA = await Friend.findOne({
     requester: req.user._id,
@@ -148,38 +148,56 @@ exports.deletefromFriends = catchAsync(async (req, res, next) => {
     requester: req.query.requester
   });
 
-  if (docA === null || docB === null)
-    return next(new AppError('You are not friends', 401));
-
+  if (docA === null || docB === null) {
+    return next(new AppError('You are not friends', 403));
+  }
   await User.findOneAndUpdate(
     { _id: req.user._id },
-    { $pull: { Friends: docA._id } },
+    { $pull: { friends: docA._id } },
     { new: true }
   );
 
   await User.findOneAndUpdate(
     { _id: req.query.requester },
-    { $pull: { Friends: docB._id } },
+    { $pull: { friends: docB._id } },
     { new: true }
   );
 
   await docA.remove();
   await docB.remove();
 
-  const { name } = await User.findOne({ _id: req.query.requester });
+  const requester = await User.findOne({ _id: req.query.requester });
 
-  let message = 'You are not friends from now';
-  // only sent information when user rejects request
-  if (req.route.path === '/reject') {
-    message = 'invite successfully rejected';
-    await new Email(req.user, '', {
-      status: 'rejected',
-      name
-    }).sendFriendInformation();
-  }
+  const message = 'You are no longer friends';
+
+  await new Email(requester, '', {
+    status: 'rejected',
+    bame: req.user.name
+  }).sendFriendInformation();
 
   res.status(200).json({
     status: 'success',
     message
+  });
+});
+
+exports.getUserFriends = catchAsync(async (req, res, next) => {
+  const userFriends =
+    req.user.role === 'admin' && req.route.path !== '/me/'
+      ? await User.findById(req.params.id).populate('friends')
+      : await User.findById(req.user.id).populate({
+          path: 'friends',
+          options: { sort: { createdAt: 'desc' } }
+        });
+
+  if (!userFriends.length) {
+    return next(new AppError('No friends found', 404));
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      userFriends: userFriends.Friends
+    }
   });
 });

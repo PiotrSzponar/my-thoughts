@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
   city: {
     type: String
   },
-  Friends: [
+  friends: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Friend'
