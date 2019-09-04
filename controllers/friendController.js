@@ -184,8 +184,11 @@ exports.deletefromFriends = catchAsync(async (req, res, next) => {
 exports.getUserFriends = catchAsync(async (req, res, next) => {
   const userFriends =
     req.user.role === 'admin' && req.route.path !== '/me/'
-      ? await User.findById(req.params.id).populate('friends')
-      : await User.findById(req.user.id).populate({
+      ? await User.find({ _id: req.params.id }).populate({
+          path: 'friends',
+          options: { sort: { createdAt: 'desc' } }
+        })
+      : await User.find({ _id: req.params.id }).populate({
           path: 'friends',
           options: { sort: { createdAt: 'desc' } }
         });
@@ -194,10 +197,12 @@ exports.getUserFriends = catchAsync(async (req, res, next) => {
     return next(new AppError('No friends found', 404));
   }
 
+  const friendsList = userFriends.map(el => el.friends);
+
   res.status(200).json({
     status: 'success',
     data: {
-      userFriends: userFriends.Friends
+      friendsList
     }
   });
 });
