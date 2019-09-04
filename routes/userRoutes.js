@@ -42,6 +42,16 @@ router.get(
   authController.socialSignin
 );
 
+// Profile complement after first login (isCompleted: false -> true)
+router.patch(
+  '/signup/complete',
+  authController.protect,
+  fileController.uploadUserPhoto,
+  fileController.resizeUserPhoto,
+  authController.completeValidator,
+  userController.completeProfile
+);
+
 // User Sign Up (local)
 router.post('/signup', authController.signupValidator, authController.signup);
 
@@ -67,15 +77,6 @@ router.patch(
 
 // After this MW - only for logged in users
 router.use(authController.protect);
-
-// Profile complement after first login (isCompleted: false -> true)
-router.patch(
-  '/signup/complete',
-  fileController.uploadUserPhoto,
-  fileController.resizeUserPhoto,
-  authController.completeValidator,
-  userController.completeProfile
-);
 
 // Find users
 router.get('/search', userController.search);
