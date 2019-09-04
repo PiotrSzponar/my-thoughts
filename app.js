@@ -12,6 +12,7 @@ const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const userRouter = require('./routes/userRoutes');
+const friendRouter = require('./routes/friendRoutes');
 
 const passportSetup = require('./utils/initPassport');
 
@@ -61,7 +62,7 @@ app.use(
 
 // ROUTES
 app.use('/api/users', userRouter);
-
+app.use('/api/friends', friendRouter);
 // 404 - Not Found
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
