@@ -13,8 +13,6 @@ import {
   MDBModalFooter
 } from 'mdbreact';
 
-// import { SignUpService } from '../../services/user.service';
-
 const SignUp = props => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

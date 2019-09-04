@@ -7,15 +7,12 @@ import {
   MDBCardBody,
   MDBInput,
   MDBBtn
-  // MDBFormInline
-  // MDBIcon,
-  // MDBModalFooter
 } from 'mdbreact';
 
-// import { SignUpService } from '../../services/user.service';
+import { SignUpService } from '../../services/user.service';
 
 const CompleteSignup = props => {
-  console.log(props);
+  const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('female');
   const [bio, setBio] = useState('');
@@ -25,14 +22,21 @@ const CompleteSignup = props => {
 
   const submitHandler = async e => {
     e.preventDefault();
-    console.log('props', props);
-    // await SignUpService({
-    //   name,
-    //   email,
-    //   password,
-    //   paswwordConfirm: passwordCheck,
-    //   method: 'local'
-    // });
+    const result = await SignUpService({
+      name,
+      email: props.location.state.email,
+      password: props.location.state.password,
+      passwordConfirm: props.location.state.passwordCheck,
+      method: 'local',
+      birthDate,
+      bio,
+      city,
+      country,
+      photo,
+      gender
+    });
+
+    console.log(result);
   };
 
   return (
@@ -55,6 +59,16 @@ const CompleteSignup = props => {
                 noValidate
               >
                 <MDBInput
+                  label="name*"
+                  group
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  error="wrong"
+                  success="right"
+                  required
+                />
+                <MDBInput
                   label="Birth Date*"
                   group
                   type="text"
@@ -64,24 +78,22 @@ const CompleteSignup = props => {
                   success="right"
                   required
                 />
-                {/* <MDBFormInline> */}
-                <div className="text-center mb-3">
-                  <MDBInput
-                    label="female"
-                    type="radio"
-                    value="female"
-                    checked={gender === 'female'}
-                    onClick={e => setGender(e.target.value)}
-                  />
-                  <MDBInput
-                    label="male"
-                    type="radio"
-                    value="male"
-                    checked={gender === 'male'}
-                    onClick={e => setGender(e.target.value)}
-                  />
-                  {/* </MDBFormInline> */}
-                </div>
+                <MDBInput
+                  label="female"
+                  group
+                  type="radio"
+                  value="female"
+                  checked={gender === 'female'}
+                  onClick={e => setGender(e.target.value)}
+                />
+                <MDBInput
+                  label="male"
+                  group
+                  type="radio"
+                  value="male"
+                  checked={gender === 'male'}
+                  onClick={e => setGender(e.target.value)}
+                />
                 <MDBInput
                   label="Your bio"
                   group

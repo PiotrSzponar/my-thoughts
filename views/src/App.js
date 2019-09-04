@@ -8,6 +8,7 @@ import Navigation from './components/Navigation';
 import SignIn from './components/Auth/SignIn';
 import SignUp from './components/Auth/SignUp';
 import CompleteSignUp from './components/Auth/CompleteSignup';
+import Verification from './components/Auth/verification';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/signin" component={SignIn} />
         <Route path="/signup" component={SignUp} />
         <Route path="/complete-signup" component={CompleteSignUp} />
+        <Route path="/verification" component={Verification} />
       </Switch>
     </Router>
   );
