@@ -1,4 +1,5 @@
 const { validationResult } = require('express-validator');
+const fs = require('fs');
 
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -34,7 +35,9 @@ exports.search = catchAsync(async (req, res, next) => {
       $text: { $search: q },
       _id: { $not: { $eq: req.user._id } },
       isHidden: false,
-      isVerified: true
+      isVerified: true,
+      isActive: true,
+      isCompleted: true
     },
     {
       score: { $meta: 'textScore' }
@@ -53,7 +56,9 @@ exports.search = catchAsync(async (req, res, next) => {
       ],
       _id: { $not: { $eq: req.user._id } },
       isHidden: false,
-      isVerified: true
+      isVerified: true,
+      isActive: true,
+      isCompleted: true
     }).limit(50);
 
     // If there is no full words or even part of them - no results
@@ -76,28 +81,46 @@ exports.search = catchAsync(async (req, res, next) => {
 
 // Show current user
 // With role user:
-//  - get id from req.user and show basic info about logged in user
-// With role admin:
-//  - get user id from params and show all info about user
+//  - get id from req.user/params and show basic info about user
+//  - get only 6 sample friends and number of all user friends
 exports.getUser = catchAsync(async (req, res, next) => {
-  const searchedUser =
-    req.user.role === 'admin' && req.route.path !== '/me'
-      ? await User.findById(req.params.id)
-          .populate('friends')
-          .select('+isHidden +isVerified +isActive +isCompleted')
-      : await User.findById(req.user.id).populate({
+  const user =
+    req.route.path === '/me'
+      ? await User.findById(req.user.id).populate({
           path: 'friends',
-          options: { sort: { createdAt: 'desc' }, limit: 50 }
-        });
+          options: { sort: { createdAt: 'desc' } }
+        })
+      : await User.findById(req.params.id)
+          .populate({
+            path: 'friends',
+            options: { sort: { createdAt: 'desc' } }
+          })
+          .select(
+            `${
+              req.user.role === 'admin'
+                ? '+isHidden +isVerified +isActive +isCompleted'
+                : '-isHidden -isVerified -isActive -isCompleted'
+            }`
+          );
 
-  if (!searchedUser) {
+  if (!user) {
     return next(new AppError('No user found', 404));
   }
+
+  const friendsList = user.friends
+    .filter(el => el.status === 3)
+    .map(obj => ({
+      userId: obj.recipient,
+      name: obj.name
+    }))
+    .slice(0, 6);
 
   res.status(200).json({
     status: 'success',
     data: {
-      searchedUser
+      ...user._doc,
+      friendsCount: user.friendsCount,
+      friends: friendsList
     }
   });
 });
@@ -123,11 +146,11 @@ exports.updateUser = catchAsync(async (req, res, next) => {
       req.body,
       'gender',
       'birthDate',
-      'photo',
       'bio',
       'country',
       'city',
-      'isHidden'
+      'isHidden',
+      'deletePhoto'
     );
 
   // Update user document and returned the new one
@@ -146,6 +169,21 @@ exports.updateUser = catchAsync(async (req, res, next) => {
     return next(new AppError('No user found', 404));
   }
 
+  // Add user photo
+  if (req.file) {
+    updatedUser.photo = req.file.filename;
+    await updatedUser.save();
+  }
+
+  // Delete photo
+  if (req.body.deletePhoto && req.body.deletePhoto === 'true') {
+    fs.unlink(`public/images/users/${updatedUser.photo}`, err => {
+      if (err) return next(new AppError('Photo not found', 404));
+    });
+    updatedUser.photo = 'default.jpg';
+    await updatedUser.save();
+  }
+
   res.status(200).json({
     status: 'success',
     data: {
@@ -154,11 +192,11 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   });
 });
 
-// Complete user profile after social login
+// Complete user profile after signup
 // Every user (no matter what login method was used) ends with the same filled profile
-exports.socialComplete = catchAsync(async (req, res, next) => {
-  if (!req.user || req.user.method === 'local') {
-    return next(new AppError('Use social login!', 403));
+exports.completeProfile = catchAsync(async (req, res, next) => {
+  if (!req.user) {
+    return next(new AppError('Login first!', 403));
   }
   // There is another way to update user profile
   // Return error if completed user wants to change something in this way
@@ -188,11 +226,11 @@ exports.socialComplete = catchAsync(async (req, res, next) => {
     'name',
     'gender',
     'birthDate',
-    'photo',
     'bio',
     'country',
     'city',
-    'isHidden'
+    'isHidden',
+    'deletePhoto'
   );
   // Mark user profile as completed
   filteredBody.isCompleted = true;
@@ -202,6 +240,22 @@ exports.socialComplete = catchAsync(async (req, res, next) => {
     new: true,
     runValidators: true
   });
+
+  // Add user photo
+  if (req.file) {
+    user.photo = req.file.filename;
+    await user.save();
+  }
+
+  // Delete photo
+  if (req.body.deletePhoto && req.body.deletePhoto === 'true') {
+    fs.unlink(`public/images/users/${user.photo}`, err => {
+      if (err) return next(new AppError('Photo not found', 404));
+    });
+    user.photo = 'default.jpg';
+    await user.save();
+  }
+
   res.status(201).json({
     status: 'success',
     message: 'User profile completed',
@@ -250,7 +304,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
     User.find()
       .populate('friends')
-      .select(`${!req.query.fields && '+isHidden +isVerified +isActive'}`),
+      .select('+isHidden +isVerified +isActive +isCompleted'),
     req.query
   )
     .filter()
@@ -278,7 +332,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
     name: req.body.name,
     gender: req.body.gender,
     birthDate: req.body.birthDate,
-    photo: req.body.photo,
+    photo: req.file ? req.file.filename : 'default.jpg',
     bio: req.body.bio,
     country: req.body.country,
     city: req.body.city,

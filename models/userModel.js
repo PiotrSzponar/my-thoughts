@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const request = require('request');
+const sharp = require('sharp');
+
+const AppError = require('./../utils/appError');
 
 const userSchema = new mongoose.Schema(
   {
@@ -35,7 +40,12 @@ const userSchema = new mongoose.Schema(
       type: String
     },
     photo: {
-      type: String
+      type: String,
+      default: 'default.jpg',
+      set: function(photo) {
+        this._photo = this.photo;
+        return photo;
+      }
     },
     bio: {
       type: String,
@@ -80,8 +90,20 @@ const userSchema = new mongoose.Schema(
       type: String
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toObject: {
+      virtuals: true
+    },
+    toJSON: {
+      virtuals: true
+    }
+  }
 );
+
+userSchema.virtual('friendsCount').get(function() {
+  return this.friends.filter(el => el.status === 3).length;
+});
 
 // Before save user to DB check if password filed was changed
 // If was, hash password and remove passwordConfirm (we won't use it)
@@ -97,12 +119,40 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-// Return only active and completed users when using 'find' methods
-userSchema.pre(/^find/, function(next) {
-  this.find({
-    isActive: { $ne: false },
-    isCompleted: { $ne: false }
+// Remove old user photo before saving the new one
+userSchema.pre('save', function(next) {
+  if (!this.isModified('photo')) return next();
+
+  const oldPhoto = this._photo;
+
+  if (oldPhoto !== 'default.jpg') {
+    fs.unlink(`public/images/users/${oldPhoto}`, err => {
+      if (err) return next(new AppError('Photo not found', 404));
+    });
+  }
+  next();
+});
+
+// Save user photo from socials
+userSchema.pre('save', function(next) {
+  if (
+    !this.isModified('photo') ||
+    this.photo === 'default.jpg' ||
+    !this.photo.startsWith('https')
+  )
+    return next();
+
+  const fileName = `user-${this.id}-${Date.now()}.jpeg`;
+
+  request({ url: this.photo, encoding: null }, function(err, res, bodyBuffer) {
+    sharp(bodyBuffer)
+      .resize(250, 250)
+      .toFormat('jpeg')
+      .jpeg({ quality: 60 })
+      .toFile(`public/images/users/${fileName}`);
   });
+
+  this.photo = fileName;
   next();
 });
 
