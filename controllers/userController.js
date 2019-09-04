@@ -1,4 +1,5 @@
 const { validationResult } = require('express-validator');
+const fs = require('fs');
 
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -130,7 +131,8 @@ exports.updateUser = catchAsync(async (req, res, next) => {
       'bio',
       'country',
       'city',
-      'isHidden'
+      'isHidden',
+      'deletePhoto'
     );
 
   // Update user document and returned the new one
@@ -152,6 +154,15 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   // Add user photo
   if (req.file) {
     updatedUser.photo = req.file.filename;
+    await updatedUser.save();
+  }
+
+  // Delete photo
+  if (req.body.deletePhoto && req.body.deletePhoto === 'true') {
+    fs.unlink(`public/images/users/${updatedUser.photo}`, err => {
+      if (err) return next(new AppError('Photo not found', 404));
+    });
+    updatedUser.photo = 'default.jpg';
     await updatedUser.save();
   }
 
@@ -200,7 +211,8 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
     'bio',
     'country',
     'city',
-    'isHidden'
+    'isHidden',
+    'deletePhoto'
   );
   // Mark user profile as completed
   filteredBody.isCompleted = true;
@@ -214,6 +226,15 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
   // Add user photo
   if (req.file) {
     user.photo = req.file.filename;
+    await user.save();
+  }
+
+  // Delete photo
+  if (req.body.deletePhoto && req.body.deletePhoto === 'true') {
+    fs.unlink(`public/images/users/${user.photo}`, err => {
+      if (err) return next(new AppError('Photo not found', 404));
+    });
+    user.photo = 'default.jpg';
     await user.save();
   }
 
