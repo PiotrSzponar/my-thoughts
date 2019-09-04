@@ -83,7 +83,7 @@ const SignIn = () => {
             <MDBModalFooter className="mx-5 pt-3 mb-1">
               <p className="font-small grey-text d-flex justify-content-end">
                 Not a member?
-                <a href="#!" className="blue-text ml-1">
+                <a href="/signup" className="blue-text ml-1">
                   Sign Up
                 </a>
               </p>

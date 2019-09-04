@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { withRouter } from 'react-router-dom';
+
 import {
   MDBContainer,
   MDBRow,
@@ -11,7 +13,35 @@ import {
   MDBModalFooter
 } from 'mdbreact';
 
-const SignUp = () => {
+// import { SignUpService } from '../../services/user.service';
+
+const SignUp = props => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordCheck, setPasswordCheck] = useState('');
+
+  const [toCompleteSignup, setCompleteSignup] = useState(false);
+
+  const submitHandler = e => {
+    e.preventDefault();
+    localStorage.setItem('email', email);
+    localStorage.setItem('password', password);
+    localStorage.setItem('passwordCheck', passwordCheck);
+    if (password === passwordCheck) {
+      setCompleteSignup(true);
+    }
+  };
+
+  useEffect(() => {
+    if (toCompleteSignup === true) {
+      props.history.push('/complete-signup', {
+        email,
+        password,
+        passwordCheck
+      });
+    }
+  });
+
   return (
     <MDBContainer>
       <MDBRow center>
@@ -19,43 +49,60 @@ const SignUp = () => {
           <MDBCard>
             <MDBCardBody className="mx-4">
               <div className="text-center">
+                <h5 className="dark-grey-text mb-6">
+                  <strong>Step 1</strong>
+                </h5>
                 <h3 className="dark-grey-text mb-5">
                   <strong>Sign Up</strong>
                 </h3>
               </div>
-              <MDBInput
-                label="Your name"
-                group
-                type="text"
-                validate
-                error="wrong"
-                success="right"
-              />
-              <MDBInput
-                label="Your email"
-                group
-                type="email"
-                validate
-                error="wrong"
-                success="right"
-              />
-              <MDBInput
-                label="Your password"
-                group
-                type="password"
-                validate
-                containerClass="mb-0"
-              />
-              <div className="text-center mb-3">
-                <MDBBtn
-                  type="button"
-                  gradient="blue"
-                  rounded
-                  className="btn-block z-depth-1a"
-                >
-                  Sign Up
-                </MDBBtn>
-              </div>
+              <form
+                className="needs-validation"
+                onSubmit={submitHandler}
+                noValidate
+              >
+                <MDBInput
+                  label="Your email"
+                  name="email"
+                  group
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  error="wrong"
+                  success="right"
+                  required
+                />
+                <MDBInput
+                  label="Your password"
+                  name="password"
+                  group
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  containerClass="mb-0"
+                  required
+                />
+                <MDBInput
+                  label="Confirm your password"
+                  name="passwordCheck"
+                  group
+                  type="password"
+                  value={passwordCheck}
+                  onChange={e => setPasswordCheck(e.target.value)}
+                  containerClass="mb-0"
+                  required
+                />
+                <div className="text-center mb-3">
+                  <MDBBtn
+                    type="submit"
+                    gradient="blue"
+                    rounded
+                    className="btn-block z-depth-1a"
+                  >
+                    Sign Up
+                  </MDBBtn>
+                </div>
+              </form>
               <p className="font-small dark-grey-text text-right d-flex justify-content-center mb-3 pt-2">
                 or Sign in with:
               </p>
@@ -85,7 +132,7 @@ const SignUp = () => {
             <MDBModalFooter className="mx-5 pt-3 mb-1">
               <p className="font-small grey-text d-flex justify-content-end">
                 already a member?
-                <a href="#!" className="blue-text ml-1">
+                <a href="/signin" className="blue-text ml-1">
                   Sign In
                 </a>
               </p>
@@ -97,4 +144,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default withRouter(SignUp);

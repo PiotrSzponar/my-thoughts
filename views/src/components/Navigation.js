@@ -7,8 +7,8 @@ import {
   MDBNavItem,
   MDBNavLink,
   MDBNavbarToggler,
-  MDBCollapse,
-  MDBFormInline
+  MDBCollapse
+  // MDBFormInline
   // MDBDropdown,
   // MDBDropdownToggle,
   // MDBDropdownMenu,
@@ -55,10 +55,10 @@ const Navigation = () => {
             <MDBNavLink to="/">Home</MDBNavLink>
           </MDBNavItem>
           <MDBNavItem>
-            <MDBNavLink to="/signUp">Sign Up</MDBNavLink>
+            <MDBNavLink to="/signup">Sign Up</MDBNavLink>
           </MDBNavItem>
           <MDBNavItem>
-            <MDBNavLink to="/SignIn">Sign In</MDBNavLink>
+            <MDBNavLink to="/Signin">Sign In</MDBNavLink>
           </MDBNavItem>
           {/* <MDBNavItem>
               <MDBDropdown>
