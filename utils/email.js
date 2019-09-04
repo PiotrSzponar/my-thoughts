@@ -1,9 +1,10 @@
 const nodemailer = require('nodemailer');
 
 module.exports = class Email {
-  constructor(user, url) {
+  constructor(user, url, info = undefined) {
     this.to = user.email;
     this.name = user.name;
+    this.info = info;
     this.url = url;
     this.from = `${process.env.EMAIL_FROM_NAME} <${process.env.EMAIL_FROM_EMAIL}>`;
   }
@@ -82,6 +83,39 @@ module.exports = class Email {
       <h3>Welcome ${this.name}! Have you forgotten your password?</h3>
       <p>Please go to the page below and use reset password form.</p>
       <p><a href="${this.url}">Reset your password!</a></p>
+      <br>
+      <hr>
+      <p>If you didn't request this, please ignore this email.</p>
+      </center>
+      `
+    );
+  }
+
+  async sendFriendInformation() {
+    await this.send(
+      `My Thoughts - ${this.info.name} has ${this.info.status} your invitation to become friends!`,
+      `
+      <center>
+      <h1>.::My Thoughts::.</h1>
+      <h3>Welcome ${this.name}! Your invitation to ${this.info.name} has been ${this.info.status}</h3>
+      <br>
+      <hr>
+      <p>If you didn't request this, please ignore this email.</p>
+      </center>
+      `
+    );
+  }
+
+  async sendFriendInvitation() {
+    await this.send(
+      `My Thoughts - ${this.info.name} has sent you invitation to become friends!`,
+      `
+      <center>
+      <h1>.::My Thoughts::.</h1>
+      <h3>Welcome ${this.name}! You have new invitation</h3>
+      <p>${this.info.name} wants to be your friend</p>
+      <p><a href="${this.info.accept}">ACCEPT!</a></p>
+      <p><a href="${this.info.reject}">REJECT!</a></p>
       <br>
       <hr>
       <p>If you didn't request this, please ignore this email.</p>
