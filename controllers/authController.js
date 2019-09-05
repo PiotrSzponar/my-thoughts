@@ -76,20 +76,13 @@ exports.signup = catchAsync(async (req, res, next) => {
       )
     );
   }
-
   const newUser = await User.create({
     method: 'local',
+    name: req.body.name,
     email: req.body.email,
     password: req.body.password,
     passwordConfirm: req.body.passwordConfirm,
-    name: req.body.name,
-    gender: req.body.gender,
-    birthDate: req.body.birthDate,
-    photo: req.body.photo,
-    bio: req.body.bio,
-    country: req.body.country,
-    city: req.body.city,
-    isCompleted: true
+    isCompleted: false
   });
 
   const verificationToken = signToken(
@@ -105,14 +98,14 @@ exports.signup = catchAsync(async (req, res, next) => {
   newUser.isVerified = undefined;
   newUser.isHidden = undefined;
   newUser.isActive = undefined;
+  newUser.isCompleted = undefined;
 
   res.status(201).json({
     status: 'success',
     message: 'User created and verification token sent to email!',
     data: {
       user: newUser
-    },
-    verificationToken
+    }
   });
 });
 
@@ -242,7 +235,7 @@ exports.protect = catchAsync(async (req, res, next) => {
 
   // Allow uncompleted user to enter only social-complete form
   const path = req.route === undefined ? '' : req.route.path;
-  if (!currentUser.isCompleted && path !== '/signup/social-complete') {
+  if (!currentUser.isCompleted && path !== '/signup/complete') {
     // Later this should redirect to form, now just error
     return next(new AppError('Complete user profile!', 401));
   }
@@ -395,27 +388,10 @@ exports.signupValidator = [
     .withMessage('Please provide your name.')
     .isLength({ max: 50 })
     .withMessage('Max length of name is 50 characters.')
-    .trim(),
-  body('birthDate')
-    .not()
-    .isEmpty()
-    .withMessage('Please provide your birth date.')
-    .isBefore()
-    .withMessage('Please provide a valid birth date (should be in the past).'),
-  body('gender')
-    .not()
-    .isEmpty()
-    .withMessage('Please provide your gender.')
+    .trim()
 ];
 
-exports.socialCompleteValidator = [
-  body('name')
-    .not()
-    .isEmpty()
-    .withMessage('Please provide your name.')
-    .isLength({ max: 50 })
-    .withMessage('Max length of name is 50 characters.')
-    .trim(),
+exports.completeValidator = [
   body('birthDate')
     .not()
     .isEmpty()

@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
@@ -25,8 +26,14 @@ app.use(passport.initialize());
 
 // GLOBAL MIDDLEWARES
 
+// Initialize Passport MW
+app.use(passport.initialize());
+
 // Set security HTTP headers
 app.use(helmet());
+
+// Serving static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Development logging
 if (process.env.NODE_ENV === 'development') {

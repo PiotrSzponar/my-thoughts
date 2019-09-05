@@ -22,10 +22,13 @@
     "mongodb": "^3.3.0-beta2",
     "mongoose": "^5.6.7",
     "morgan": "~1.9.1",
+    "multer": "^1.4.2",
     "nodemailer": "^6.3.0",
     "passport": "^0.4.0",
     "passport-facebook": "^3.0.0",
     "passport-google-oauth2": "^0.2.0",
+    "request": "^2.88.0",
+    "sharp": "^0.23.0",
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {
