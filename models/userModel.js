@@ -91,19 +91,9 @@ const userSchema = new mongoose.Schema(
     }
   },
   {
-    timestamps: true,
-    toObject: {
-      virtuals: true
-    },
-    toJSON: {
-      virtuals: true
-    }
+    timestamps: true
   }
 );
-
-userSchema.virtual('friendsCount').get(function() {
-  return this.friends.filter(el => el.status === 3).length;
-});
 
 // Before save user to DB check if password filed was changed
 // If was, hash password and remove passwordConfirm (we won't use it)

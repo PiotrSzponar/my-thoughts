@@ -119,7 +119,7 @@ exports.getUser = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       ...user._doc,
-      friendsCount: user.friendsCount,
+      friendsCount: user.friends.length,
       friends: friendsList
     }
   });
