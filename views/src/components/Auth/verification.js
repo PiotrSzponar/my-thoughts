@@ -1,47 +1,28 @@
-import React from 'react';
-import {
-  MDBJumbotron,
-  MDBBtn,
-  MDBContainer,
-  MDBRow,
-  MDBCol,
-  MDBCardTitle,
-  MDBIcon
-} from 'mdbreact';
+import React, { useState, useEffect } from 'react';
 
-const JumbotronPage = () => {
+import Jumbotron from '../Jumbotron';
+import { verifyService } from '../../services/user.service';
+
+const Verification = props => {
+  const [message, setMessage] = useState('Wait for it!');
+
+  const verficiateUrl = async () => {
+    const verificationId = props.match.params.id;
+
+    const resp = await verifyService(verificationId);
+
+    setMessage(resp);
+  };
+
+  useEffect(() => {
+    verficiateUrl();
+  });
+
   return (
-    <MDBContainer>
-      <MDBRow>
-        <MDBCol>
-          <MDBJumbotron style={{ padding: 0 }}>
-            <MDBCol
-              className="text-white text-center py-5 px-4 my-5"
-              style={{
-                backgroundImage: `./verification.jpeg`
-              }}
-            >
-              <MDBCol className="py-5">
-                <MDBCardTitle className="h1-responsive pt-3 m-5 font-bold">
-                  Verification
-                </MDBCardTitle>
-                <p className="mx-5 mb-5">
-                  Hurra! You are now a member of our Family Welcome to My
-                  Thoughts!
-                </p>
-                <MDBBtn outline color="white" className="mb-5">
-                  <MDBIcon icon="angle-double-left" className="mr-2"></MDBIcon>
-                  <a href="/signin" className="white-text ml-1">
-                    Go To Home Page
-                  </a>
-                </MDBBtn>
-              </MDBCol>
-            </MDBCol>
-          </MDBJumbotron>
-        </MDBCol>
-      </MDBRow>
-    </MDBContainer>
+    <Jumbotron>
+      <p className="mx-5 mb-5">{message}</p>
+    </Jumbotron>
   );
 };
 
-export default JumbotronPage;
+export default Verification;

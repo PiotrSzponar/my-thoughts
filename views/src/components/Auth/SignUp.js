@@ -20,23 +20,20 @@ const SignUp = props => {
 
   const [toCompleteSignup, setCompleteSignup] = useState(false);
 
-  const submitHandler = e => {
+  const submitRegister = e => {
     e.preventDefault();
     localStorage.setItem('email', email);
     localStorage.setItem('password', password);
     localStorage.setItem('passwordCheck', passwordCheck);
+
     if (password === passwordCheck) {
       setCompleteSignup(true);
     }
   };
 
   useEffect(() => {
-    if (toCompleteSignup === true) {
-      props.history.push('/complete-signup', {
-        email,
-        password,
-        passwordCheck
-      });
+    if (toCompleteSignup) {
+      props.history.push('/complete-signup');
     }
   });
 
@@ -56,7 +53,7 @@ const SignUp = props => {
               </div>
               <form
                 className="needs-validation"
-                onSubmit={submitHandler}
+                onSubmit={submitRegister}
                 noValidate
               >
                 <MDBInput

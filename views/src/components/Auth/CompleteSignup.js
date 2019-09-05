@@ -20,13 +20,16 @@ const CompleteSignup = props => {
   const [country, setCountry] = useState('');
   const [photo, setPhoto] = useState('');
 
+  const [message, setMessage] = useState('');
+
   const submitHandler = async e => {
     e.preventDefault();
+    setMessage('');
     const result = await SignUpService({
       name,
-      email: props.location.state.email,
-      password: props.location.state.password,
-      passwordConfirm: props.location.state.passwordCheck,
+      email: localStorage.getItem('email'),
+      password: localStorage.getItem('password'),
+      passwordConfirm: localStorage.getItem('passwordCheck'),
       method: 'local',
       birthDate,
       bio,
@@ -35,8 +38,7 @@ const CompleteSignup = props => {
       photo,
       gender
     });
-
-    console.log(result);
+    setMessage(result.message);
   };
 
   return (
@@ -53,6 +55,7 @@ const CompleteSignup = props => {
                   <strong>Complete Signup</strong>
                 </h3>
               </div>
+              {message}
               <form
                 className="needs-validation"
                 onSubmit={submitHandler}
