@@ -81,28 +81,46 @@ exports.search = catchAsync(async (req, res, next) => {
 
 // Show current user
 // With role user:
-//  - get id from req.user and show basic info about logged in user
-// With role admin:
-//  - get user id from params and show all info about user
+//  - get id from req.user/params and show basic info about user
+//  - get only 6 sample friends and number of all user friends
 exports.getUser = catchAsync(async (req, res, next) => {
-  const searchedUser =
-    req.user.role === 'admin' && req.route.path !== '/me'
-      ? await User.findById(req.params.id)
-          .populate('friends')
-          .select('+isHidden +isVerified +isActive +isCompleted')
-      : await User.findById(req.user.id).populate({
+  const user =
+    req.route.path === '/me'
+      ? await User.findById(req.user.id).populate({
           path: 'friends',
-          options: { sort: { createdAt: 'desc' }, limit: 50 }
-        });
+          options: { sort: { createdAt: 'desc' } }
+        })
+      : await User.findById(req.params.id)
+          .populate({
+            path: 'friends',
+            options: { sort: { createdAt: 'desc' } }
+          })
+          .select(
+            `${
+              req.user.role === 'admin'
+                ? '+isHidden +isVerified +isActive +isCompleted'
+                : '-isHidden -isVerified -isActive -isCompleted'
+            }`
+          );
 
-  if (!searchedUser) {
+  if (!user) {
     return next(new AppError('No user found', 404));
   }
+
+  const friendsList = user.friends
+    .filter(el => el.status === 3)
+    .map(obj => ({
+      userId: obj.recipient,
+      name: obj.name
+    }))
+    .slice(0, 6);
 
   res.status(200).json({
     status: 'success',
     data: {
-      searchedUser
+      ...user._doc,
+      friendsCount: user.friends.length,
+      friends: friendsList
     }
   });
 });
@@ -286,7 +304,7 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(
     User.find()
       .populate('friends')
-      .select(`${!req.query.fields && '+isHidden +isVerified +isActive'}`),
+      .select('+isHidden +isVerified +isActive +isCompleted'),
     req.query
   )
     .filter()
