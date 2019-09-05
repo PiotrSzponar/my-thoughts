@@ -156,6 +156,15 @@ userSchema.pre('save', function(next) {
   next();
 });
 
+// Return only active and completed users when using 'find' methods
+// userSchema.pre('find', function(next) {
+//   this.find({
+//     isActive: { $ne: false },
+//     isCompleted: { $ne: false }
+//   });
+//   next();
+// });
+
 // Compare hashed passwords
 userSchema.methods.correctPassword = async function(
   candidatePassword,
