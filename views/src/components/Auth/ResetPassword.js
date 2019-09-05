@@ -46,6 +46,7 @@ const Verification = props => {
               group
               type="password"
               value={password}
+              labelClass="white-text"
               onChange={e => setPassword(e.target.value)}
               containerClass="mb-0"
               required
@@ -56,8 +57,9 @@ const Verification = props => {
               group
               type="password"
               value={passwordConfirm}
+              labelClass="white-text"
               onChange={e => setPasswordConfirm(e.target.value)}
-              containerClass="mb-0"
+              containerClass="mb-0 white-text"
               required
             />
             <MDBBtn type="submit" color="white" rounded className="z-depth-1a">

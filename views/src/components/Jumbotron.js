@@ -14,9 +14,9 @@ const Jumbotron = ({ children }) => {
     <MDBContainer>
       <MDBRow>
         <MDBCol>
-          <MDBJumbotron style={{ padding: 0, background: 'black' }}>
-            <MDBCol className="text-white text-center py-5 px-4 my-5">
-              <MDBCol className="py-5">
+          <MDBJumbotron className="primary-color" style={{ padding: 0 }}>
+            <MDBCol className="text-center py-5 px-4 my-5">
+              <MDBCol className="white-text py-5">
                 {children}
                 <MDBBtn outline color="white" className="mb-5">
                   <MDBIcon icon="angle-double-left" className="mr-2"></MDBIcon>

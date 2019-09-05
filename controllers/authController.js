@@ -97,9 +97,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     process.env.JWT_VERIFICATION_EXPIRES_IN
   );
 
-  const verificationURL = `${req.protocol}://${req.get(
-    'host'
-  )}/api/users/verification/${verificationToken}`;
+  const verificationURL = `${process.env.CLIENT_NAME}/verification/${verificationToken}`;
 
   await new Email(newUser, verificationURL).sendVerification();
 
@@ -122,12 +120,13 @@ exports.signup = catchAsync(async (req, res, next) => {
 exports.verification = catchAsync(async (req, res, next) => {
   // Get user based on the token
   const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id);
+  const user = await User.findById(decoded.id).select('+isVerified');
 
   // If token has not expired, and there is user, confirm verification
   if (!user) {
     return next(new AppError('Token is invalid or has expired', 400));
   }
+
   if (user.isVerified) {
     return next(new AppError('This user has already been verified', 400));
   }
@@ -166,9 +165,7 @@ exports.resendVerification = catchAsync(async (req, res, next) => {
     process.env.JWT_VERIFICATION_EXPIRES_IN
   );
 
-  const verificationURL = `${req.protocol}://${req.get(
-    'host'
-  )}/api/users/verification/${verificationToken}`;
+  const verificationURL = `${process.env.CLIENT_NAME}/verification/${verificationToken}`;
 
   await new Email(user, verificationURL).sendVerification();
 
@@ -279,9 +276,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     // Generate token
     const resetToken = signToken(user._id, process.env.JWT_RESET_EXPIRES_IN);
 
-    const resetURL = `${req.protocol}://${req.get(
-      'host'
-    )}/api/users/reset-password/${resetToken}`;
+    const resetURL = `${process.env.CLIENT_NAME}/reset-password/${resetToken}`;
 
     // Send it to the user's email
     await new Email(user, resetURL).sendResetPassword();

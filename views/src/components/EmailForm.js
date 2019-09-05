@@ -9,6 +9,7 @@ const EmailForm = ({ handleSubmit, setEmail, isLoading }) => {
         label="Your email"
         group
         type="email"
+        labelClass="white-text"
         onChange={e => setEmail(e.target.value)}
         validate
         error="wrong"

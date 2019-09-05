@@ -48,7 +48,7 @@ const SignUp = props => {
                   <strong>Step 1</strong>
                 </h5>
                 <h3 className="dark-grey-text mb-5">
-                  <strong>Sign Up</strong>
+                  <strong>Sign up</strong>
                 </h3>
               </div>
               <form
@@ -94,12 +94,12 @@ const SignUp = props => {
                     rounded
                     className="btn-block z-depth-1a"
                   >
-                    SignUp
+                    Signup
                   </MDBBtn>
                 </div>
               </form>
               <p className="font-small dark-grey-text text-right d-flex justify-content-center mb-3 pt-2">
-                or Sign in with:
+                or Sign up with:
               </p>
               <div className="row my-3 d-flex justify-content-center">
                 <MDBBtn

@@ -5,6 +5,8 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xssClean = require('xss-clean');
 const hpp = require('hpp');
+const cors = require('cors');
+
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
 
@@ -18,6 +20,7 @@ const passportSetup = require('./utils/initPassport');
 
 const app = express();
 
+app.use(cors());
 app.use(passport.initialize());
 
 // GLOBAL MIDDLEWARES
