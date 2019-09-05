@@ -198,12 +198,19 @@ exports.getUserFriends = catchAsync(async (req, res, next) => {
     return next(new AppError('No friends found', 404));
   }
 
-  const friendsList = user.friends
-    .filter(el => el.status === 3)
-    .map(obj => ({
-      userId: obj.recipient,
-      name: obj.name
-    }));
+  const friendsList =
+    req.route.path === '/me'
+      ? user.friends.map(obj => ({
+          userId: obj.recipient,
+          name: obj.name,
+          status: obj.status
+        }))
+      : user.friends
+          .filter(el => el.status === 3)
+          .map(obj => ({
+            userId: obj.recipient,
+            name: obj.name
+          }));
 
   res.status(200).json({
     status: 'success',
