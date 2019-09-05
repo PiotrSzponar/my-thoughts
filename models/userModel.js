@@ -90,7 +90,9 @@ const userSchema = new mongoose.Schema(
       type: String
     }
   },
-  { timestamps: true }
+  {
+    timestamps: true
+  }
 );
 
 // Before save user to DB check if password filed was changed
