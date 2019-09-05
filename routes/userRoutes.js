@@ -2,6 +2,7 @@ const express = require('express');
 const passport = require('passport');
 const authController = require('../controllers/authController');
 const userController = require('../controllers/userController');
+const fileController = require('../controllers/fileController');
 
 const router = express.Router();
 
@@ -41,12 +42,14 @@ router.get(
   authController.socialSignin
 );
 
-// Profile complement after first google/facebook login (isCompleted: false -> true)
+// Profile complement after first login (isCompleted: false -> true)
 router.patch(
-  '/signup/social-complete',
+  '/signup/complete',
   authController.protect,
-  authController.socialCompleteValidator,
-  userController.socialComplete
+  fileController.uploadUserPhoto,
+  fileController.resizeUserPhoto,
+  authController.completeValidator,
+  userController.completeProfile
 );
 
 // User Sign Up (local)
@@ -82,7 +85,11 @@ router.get('/search', userController.search);
 router
   .route('/me')
   .get(userController.getUser)
-  .patch(userController.updateUser)
+  .patch(
+    fileController.uploadUserPhoto,
+    fileController.resizeUserPhoto,
+    userController.updateUser
+  )
   .delete(userController.deleteUser);
 // Separate path to change password
 router.patch(
@@ -100,12 +107,20 @@ router.use(authController.restrictTo('admin'));
 router
   .route('/')
   .get(userController.getAllUsers)
-  .post(userController.createUser);
+  .post(
+    fileController.uploadUserPhoto,
+    fileController.resizeUserPhoto,
+    userController.createUser
+  );
 
 // Operations on provided user
 router
   .route('/:id')
-  .patch(userController.updateUser)
+  .patch(
+    fileController.uploadUserPhoto,
+    fileController.resizeUserPhoto,
+    userController.updateUser
+  )
   .delete(userController.deleteUser);
 
 module.exports = router;
