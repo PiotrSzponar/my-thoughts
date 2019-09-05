@@ -5,6 +5,7 @@ const Friend = require('../models/friendsModel');
 const Email = require('../utils/email');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const APIFeatures = require('./../utils/apiFeatures');
 
 const isValidID = id => ObjectID.isValid(id);
 
@@ -183,42 +184,75 @@ exports.deletefromFriends = catchAsync(async (req, res, next) => {
 
 // get user friends
 exports.getUserFriends = catchAsync(async (req, res, next) => {
-  const user =
-    req.route.path === '/me'
-      ? await User.findById(req.user.id).populate({
-          path: 'friends',
-          options: { sort: { createdAt: 'desc' } }
+  if (req.route.path === '/me') {
+    const features = new APIFeatures(
+      Friend.find({ requester: req.user.id })
+        .populate({
+          path: 'recipient',
+          select: 'id name'
         })
-      : await User.findById(req.params.id).populate({
-          path: 'friends',
-          options: { sort: { createdAt: 'desc' } }
-        });
+        .select('status updatedAt')
+        .sort({ status: 1, updatedAt: -1 }),
+      req.query
+    ).paginate();
 
-  if (!user) {
-    return next(new AppError('No friends found', 404));
-  }
+    const userFriends = await features.query;
 
-  const friendsList =
-    req.route.path === '/me'
-      ? user.friends.map(obj => ({
-          userId: obj.recipient,
-          name: obj.name,
-          status: obj.status
-        }))
-      : user.friends
-          .filter(el => el.status === 3)
-          .map(obj => ({
-            userId: obj.recipient,
-            name: obj.name
-          }));
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      id: user.id,
-      name: user.name,
-      friendsCount: friendsList.length,
-      friends: friendsList
+    if (!userFriends) {
+      return next(new AppError('No friends found', 404));
     }
-  });
+
+    const friendsCount = userFriends.filter(el => el.status === 3).length;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        id: req.user.id,
+        name: req.user.name,
+        friendsCount,
+        friends: userFriends
+      }
+    });
+  } else {
+    const user = await User.findById(req.params.id)
+      .populate({
+        path: 'friends',
+        select: 'status',
+        match: { status: 3 }
+      })
+      .select('name');
+
+    if (!user) {
+      return next(new AppError('User not found', 404));
+    }
+
+    const features = new APIFeatures(
+      Friend.find({ requester: req.params.id, status: 3 })
+        .populate({
+          path: 'recipient',
+          select: 'id name'
+        })
+        .select('updatedAt')
+        .sort({ updatedAt: -1 }),
+      req.query
+    ).paginate();
+
+    const userFriends = await features.query;
+
+    if (!userFriends) {
+      return next(new AppError('No friends found', 404));
+    }
+
+    const friendsCount = user.friends.length;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        id: req.params.id,
+        name: user.name,
+        friendsCount,
+        friends: userFriends
+      }
+    });
+  }
 });

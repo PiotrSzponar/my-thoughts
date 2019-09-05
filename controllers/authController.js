@@ -115,7 +115,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 exports.verification = catchAsync(async (req, res, next) => {
   // Get user based on the token
   const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
-  const user = await User.findById(decoded.id);
+  const user = await User.findById(decoded.id).select('+isVerified');
 
   // If token has not expired, and there is user, confirm verification
   if (!user) {
