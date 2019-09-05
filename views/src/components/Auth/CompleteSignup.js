@@ -21,15 +21,18 @@ const CompleteSignup = props => {
   const [photo, setPhoto] = useState('');
 
   const [message, setMessage] = useState('');
+  const [isLoading, setLoading] = useState(false);
 
-  const submitHandler = async e => {
+  const submitCompleteSignup = async e => {
     e.preventDefault();
     setMessage('');
-    const result = await SignUpService({
+    setLoading(true);
+
+    const { message, status } = await SignUpService({
       name,
       email: localStorage.getItem('email'),
       password: localStorage.getItem('password'),
-      passwordConfirm: localStorage.getItem('passwordCheck'),
+      passwordConfirm: localStorage.getItem('passwordConfirm'),
       method: 'local',
       birthDate,
       bio,
@@ -38,7 +41,15 @@ const CompleteSignup = props => {
       photo,
       gender
     });
-    setMessage(result.message);
+
+    setMessage(message);
+    setLoading(false);
+
+    if (status === 'ok') {
+      setTimeout(() => {
+        props.history.push('/complete-signup');
+      }, 3000);
+    }
   };
 
   return (
@@ -58,7 +69,7 @@ const CompleteSignup = props => {
               {message}
               <form
                 className="needs-validation"
-                onSubmit={submitHandler}
+                onSubmit={submitCompleteSignup}
                 noValidate
               >
                 <MDBInput
@@ -140,7 +151,7 @@ const CompleteSignup = props => {
                     rounded
                     className="btn-block z-depth-1a"
                   >
-                    Enter
+                    {isLoading ? 'Loading...' : 'Complete'}
                   </MDBBtn>
                 </div>
               </form>

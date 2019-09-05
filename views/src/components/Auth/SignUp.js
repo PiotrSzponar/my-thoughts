@@ -16,7 +16,7 @@ import {
 const SignUp = props => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordCheck, setPasswordCheck] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
 
   const [toCompleteSignup, setCompleteSignup] = useState(false);
 
@@ -24,9 +24,9 @@ const SignUp = props => {
     e.preventDefault();
     localStorage.setItem('email', email);
     localStorage.setItem('password', password);
-    localStorage.setItem('passwordCheck', passwordCheck);
+    localStorage.setItem('passwordConfirm', passwordConfirm);
 
-    if (password === passwordCheck) {
+    if (password === passwordConfirm) {
       setCompleteSignup(true);
     }
   };
@@ -79,11 +79,11 @@ const SignUp = props => {
                 />
                 <MDBInput
                   label="Confirm your password"
-                  name="passwordCheck"
+                  name="passwordConfirmrm"
                   group
                   type="password"
-                  value={passwordCheck}
-                  onChange={e => setPasswordCheck(e.target.value)}
+                  value={passwordConfirm}
+                  onChange={e => setPasswordConfirm(e.target.value)}
                   containerClass="mb-0"
                   required
                 />
@@ -94,7 +94,7 @@ const SignUp = props => {
                     rounded
                     className="btn-block z-depth-1a"
                   >
-                    Sign Up
+                    SignUp
                   </MDBBtn>
                 </div>
               </form>

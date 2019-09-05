@@ -16,11 +16,11 @@ export const SignUpService = async body => {
       headers: header,
       body: JSON.stringify(body)
     });
-    const { status, message, data } = await response.json();
+    const { status, message } = await response.json();
 
     if (status !== 'ok') throw new Error(message);
 
-    return message;
+    return { message, status };
   } catch (error) {
     return error;
   }
@@ -32,18 +32,34 @@ export const verifyService = async id => {
       method: 'PATCH',
       headers: header
     });
-    const data = await response.json();
+    const { status, message } = await response.json();
 
-    console.log('verify', data);
-    if (data.status !== 'ok') throw new Error(data.message);
+    if (status !== 'ok') throw new Error(message);
 
-    return data;
+    return message;
   } catch (error) {
     return error.message;
   }
 };
 
-export const sendVerifyService = async body => {
+export const ResetPasswordService = async (id, body) => {
+  try {
+    const response = await fetch(`${apiUrl}api/users/reset-password/${id}`, {
+      method: 'PATCH',
+      headers: header,
+      body: JSON.stringify(body)
+    });
+    const { status, message } = await response.json();
+
+    if (status !== 'ok') throw new Error(message);
+
+    return message;
+  } catch (error) {
+    return error.message;
+  }
+};
+
+export const sendEmailToVerifyService = async body => {
   try {
     const response = await fetch(`${apiUrl}api/users/resend-verification`, {
       method: 'POST',
@@ -51,12 +67,35 @@ export const sendVerifyService = async body => {
       body: JSON.stringify(body)
     });
 
-    const data = await response.json();
-    if (data.status !== 'ok') throw new Error(data.message);
+    const { status, message } = await response.json();
+    if (status !== 'ok') throw new Error(message);
 
-    return data;
+    return message;
   } catch (error) {
     return error.message;
   }
 };
-export default { SignUpService, verifyService, sendVerifyService };
+
+export const sendEmailToForgotPasswordService = async body => {
+  try {
+    const response = await fetch(`${apiUrl}api/users/forgot-password`, {
+      method: 'POST',
+      headers: header,
+      body: JSON.stringify(body)
+    });
+
+    const { status, message } = await response.json();
+    if (status !== 'ok') throw new Error(message);
+
+    return message;
+  } catch (error) {
+    return error.message;
+  }
+};
+
+export default {
+  SignUpService,
+  verifyService,
+  sendEmailToVerifyService,
+  sendEmailToForgotPasswordService
+};

@@ -10,6 +10,8 @@ import SignUp from './components/Auth/SignUp';
 import CompleteSignUp from './components/Auth/CompleteSignup';
 import Verification from './components/Auth/Verification';
 import ResendVerification from './components/Auth/ResendVerification';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import ResetPassword from './components/Auth/ResetPassword';
 
 function App() {
   return (
@@ -20,14 +22,10 @@ function App() {
         <Route path="/signin" component={SignIn} />
         <Route path="/signup" component={SignUp} />
         <Route path="/complete-signup" component={CompleteSignUp} />
-        <Route
-          path="/verification/:id"
-          render={props => <Verification {...props} />}
-        />
-        <Route
-          path="/resend-verification"
-          render={props => <ResendVerification {...props} />}
-        />
+        <Route path="/resend-verification" component={ResendVerification} />
+        <Route path="/verification/:id" component={Verification} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/reset-password/:id" component={ResetPassword} />
       </Switch>
     </Router>
   );
