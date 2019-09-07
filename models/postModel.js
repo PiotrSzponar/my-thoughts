@@ -10,17 +10,11 @@ const postSchema = new Schema(
       type: String,
       required: [true, 'Post should contain some text!']
     },
-    photos: [
-      {
-        type: String
-      }
-    ],
+    photo: {
+      type: String
+    },
     tags: {
-      type: [
-        {
-          type: String
-        }
-      ],
+      type: [String],
       validate: {
         validator: function(el) {
           return el.length <= 10;
@@ -36,12 +30,23 @@ const postSchema = new Schema(
     author: {
       type: Schema.Types.ObjectId,
       ref: 'User'
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      select: false
     }
   },
   {
     timestamps: true
   }
 );
+
+// Return only existing posts when using 'find' methods
+postSchema.pre(/^find/, function(next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
 
 const Post = model('Post', postSchema);
 

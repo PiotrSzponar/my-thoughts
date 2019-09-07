@@ -142,16 +142,9 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   // Filtered out unwanted fields names that are not allowed to be updated, remove empties
   const filteredBody =
     req.route.path === '/me' &&
-    filterObj(
-      req.body,
-      'gender',
-      'birthDate',
-      'bio',
-      'country',
-      'city',
-      'isHidden',
-      'deletePhoto'
-    );
+    filterObj(req.body, 'bio', 'country', 'city', 'isHidden', 'deletePhoto');
+  if (req.body.gender) filteredBody.gender = req.body.gender;
+  if (req.body.birthDate) filteredBody.birthDate = req.body.birthDate;
 
   // Update user document and returned the new one
   const updatedUser =
@@ -221,17 +214,20 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
     );
   }
   // Filtered out unwanted fields names that are not allowed to be updated, remove empties
-  const filteredBody = filterObj(
-    req.body,
-    'name',
-    'gender',
-    'birthDate',
-    'bio',
-    'country',
-    'city',
-    'isHidden',
-    'deletePhoto'
-  );
+  const filteredBody =
+    req.route.path === '/me' &&
+    filterObj(
+      req.body,
+      'gender',
+      'birthDate',
+      'bio',
+      'country',
+      'city',
+      'isHidden',
+      'deletePhoto'
+    );
+  if (req.body.name) filteredBody.name = req.body.name;
+
   // Mark user profile as completed
   filteredBody.isCompleted = true;
 
