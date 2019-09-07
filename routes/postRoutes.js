@@ -8,6 +8,9 @@ const router = express.Router();
 // After this MW - only for logged in users
 router.use(authController.protect);
 
+// Find posts
+router.get('/search', postController.search);
+
 router.route('/').post(
   // fileController.uploadUserPhoto,
   // fileController.resizeUserPhoto,

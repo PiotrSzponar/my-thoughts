@@ -15,6 +15,60 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
+// Search posts by title, content or tags
+exports.search = catchAsync(async (req, res, next) => {
+  const q = req.query.q ? req.query.q.trim() : undefined;
+
+  if (!q) {
+    return next(new AppError('Search cannot be empty.', 400));
+  }
+  if (q.length < 3) {
+    return next(new AppError('Search require at least 3 characters.', 400));
+  }
+
+  // If there are spaces at input make alternative regexp like xxx|yyy|zzz
+  const newReg = q.split(' ').join('|');
+
+  // Search for full words
+  let posts = await Post.find(
+    {
+      $text: { $search: q }
+    },
+    {
+      score: { $meta: 'textScore' }
+    }
+  )
+    .sort({ score: { $meta: 'textScore' } })
+    .limit(50);
+
+  // If there are no full words search for part of word
+  if (!posts.length) {
+    posts = await Post.find({
+      $or: [
+        { title: { $regex: newReg, $options: 'gi' } },
+        { content: { $regex: newReg, $options: 'gi' } },
+        { tags: { $regex: newReg, $options: 'gi' } }
+      ]
+    }).limit(50);
+
+    // If there is no full words or even part of them - no results
+    if (!posts.length) {
+      return next(new AppError('No results', 404));
+    }
+  }
+
+  const results = posts.length;
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Searched successfully',
+    results,
+    data: {
+      posts
+    }
+  });
+});
+
 exports.createPost = catchAsync(async (req, res, next) => {
   // Validation errors
   if (!validationResult(req).isEmpty()) {
