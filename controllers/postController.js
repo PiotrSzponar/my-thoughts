@@ -95,7 +95,6 @@ exports.createPost = catchAsync(async (req, res, next) => {
   });
 
   newPost.author = undefined;
-  newPost.isDeleted = undefined;
 
   res.status(201).json({
     status: 'success',
@@ -214,12 +213,12 @@ exports.publishPost = catchAsync(async (req, res, next) => {
   if (post.author.toString() !== req.user.id) {
     return next(new AppError('You can publish only own posts', 400));
   }
-  if (!post.isDrafted) {
+  if (post.state !== 'draft') {
     return next(new AppError('This post has already been published', 400));
   }
-  await post.updateOne({ isDrafted: false });
+  await post.updateOne({ state: 'publish' });
 
-  res.send(post);
+  res.send("You published your post");
 });
 
 // Validators

@@ -31,14 +31,10 @@ const postSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'User'
     },
-    isDeleted: {
-      type: Boolean,
-      default: false,
-      select: false
-    },
-    isDrafted: {
-      type: Boolean,
-      default: true
+    state: {
+      type: String,
+      enum: ['draft', 'publish', 'delete'],
+      default: 'draft'
     }
   },
   {
@@ -48,7 +44,7 @@ const postSchema = new Schema(
 
 // Return only existing posts when using 'find' methods
 postSchema.pre(/^find/, function (next) {
-  this.find({ isDeleted: { $ne: true } });
+  this.find({ state: { $ne: 'delete' } });
   next();
 });
 
