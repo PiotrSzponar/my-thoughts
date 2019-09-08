@@ -159,13 +159,13 @@ exports.updatePost = catchAsync(async (req, res, next) => {
   const updatedPost =
     req.user.role === 'admin'
       ? await Post.findByIdAndUpdate(req.params.id, req.body, {
-          new: true,
-          runValidators: true
-        })
+        new: true,
+        runValidators: true
+      })
       : await Post.findByIdAndUpdate(req.params.id, filteredBody, {
-          new: true,
-          runValidators: true
-        });
+        new: true,
+        runValidators: true
+      });
 
   if (!updatedPost) {
     return next(new AppError('No post found to update', 404));
@@ -204,6 +204,22 @@ exports.deletePost = catchAsync(async (req, res, next) => {
     message: 'Post deleted',
     data: post
   });
+});
+
+
+exports.publishPost = catchAsync(async (req, res, next) => {
+  const id = req.body.id;
+  const post = await Post.findById(id);
+
+  if (post.author.toString() !== req.user.id) {
+    return next(new AppError('You can publish only own posts', 400));
+  }
+  if (!post.isDrafted) {
+    return next(new AppError('This post has already been published', 400));
+  }
+  await post.updateOne({ isDrafted: false });
+
+  res.send(post);
 });
 
 // Validators

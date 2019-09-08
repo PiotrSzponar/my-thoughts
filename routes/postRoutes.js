@@ -18,6 +18,11 @@ router.route('/').post(
   postController.createPost
 );
 
+router.route('/publish')
+  .patch(
+    postController.publishPost
+  );
+
 router
   .route('/:id')
   .get(postController.getPost)

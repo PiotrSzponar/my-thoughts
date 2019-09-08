@@ -16,7 +16,7 @@ const postSchema = new Schema(
     tags: {
       type: [String],
       validate: {
-        validator: function(el) {
+        validator: function (el) {
           return el.length <= 10;
         },
         message: 'Tags exceeds the limit of 10!'
@@ -35,6 +35,10 @@ const postSchema = new Schema(
       type: Boolean,
       default: false,
       select: false
+    },
+    isDrafted: {
+      type: Boolean,
+      default: true
     }
   },
   {
@@ -43,7 +47,7 @@ const postSchema = new Schema(
 );
 
 // Return only existing posts when using 'find' methods
-postSchema.pre(/^find/, function(next) {
+postSchema.pre(/^find/, function (next) {
   this.find({ isDeleted: { $ne: true } });
   next();
 });
