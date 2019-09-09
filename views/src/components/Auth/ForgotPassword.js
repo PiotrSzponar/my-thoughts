@@ -4,7 +4,7 @@ import { MDBCardBody, MDBCardTitle } from 'mdbreact';
 
 import Jumbotron from '../Jumbotron';
 import EmailForm from '../EmailForm';
-import { sendEmailToForgotPasswordService } from '../../services/user.service';
+import { sendEmailToForgotPasswordService } from '../../services/auth.service';
 
 const ResendVerification = () => {
   const [message, setMessage] = useState('');

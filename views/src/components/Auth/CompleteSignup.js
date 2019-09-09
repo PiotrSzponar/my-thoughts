@@ -9,10 +9,9 @@ import {
   MDBBtn
 } from 'mdbreact';
 
-import { SignUpService } from '../../services/user.service';
+import { SignUpLocalService } from '../../services/auth.service';
 
 const CompleteSignup = props => {
-  const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [gender, setGender] = useState('female');
   const [bio, setBio] = useState('');
@@ -28,8 +27,7 @@ const CompleteSignup = props => {
     setMessage('');
     setLoading(true);
 
-    const { message, status } = await SignUpService({
-      name,
+    const response = await SignUpLocalService({
       email: localStorage.getItem('email'),
       password: localStorage.getItem('password'),
       passwordConfirm: localStorage.getItem('passwordConfirm'),
@@ -42,13 +40,15 @@ const CompleteSignup = props => {
       gender
     });
 
-    setMessage(message);
+    // setMessage(message);
     setLoading(false);
 
-    if (status === 'ok') {
+    if (response.status === 'ok') {
       setTimeout(() => {
         props.history.push('/complete-signup');
       }, 3000);
+    } else {
+      console.log(response);
     }
   };
 
@@ -73,19 +73,9 @@ const CompleteSignup = props => {
                 noValidate
               >
                 <MDBInput
-                  label="name*"
-                  group
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  error="wrong"
-                  success="right"
-                  required
-                />
-                <MDBInput
                   label="Birth Date*"
                   group
-                  type="text"
+                  type="date"
                   value={birthDate}
                   onChange={e => setBirthDate(e.target.value)}
                   error="wrong"

@@ -1,5 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { withRouter } from 'react-router-dom';
+
+import {
+  SignUpLocalService,
+  SignUpGoogleService
+} from '../../services/auth.service';
 
 import {
   MDBContainer,
@@ -14,29 +19,41 @@ import {
 } from 'mdbreact';
 
 const SignUp = props => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
 
-  const [toCompleteSignup, setCompleteSignup] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isLoading, setLoading] = useState(false);
 
-  const submitRegister = e => {
+  const submitRegister = async e => {
     e.preventDefault();
-    localStorage.setItem('email', email);
-    localStorage.setItem('password', password);
-    localStorage.setItem('passwordConfirm', passwordConfirm);
+    setMessage('');
+    setLoading(true);
 
-    if (password === passwordConfirm) {
-      setCompleteSignup(true);
+    if (password !== passwordConfirm) {
+      setMessage('passwords dont match');
+      setLoading(false);
+      return;
     }
+
+    const response = await SignUpLocalService({
+      name,
+      email,
+      password,
+      passwordConfirm
+    });
+
+    console.log(response);
+    //  setMessage(message);
+    setLoading(false);
   };
 
-  useEffect(() => {
-    if (toCompleteSignup) {
-      props.history.push('/complete-signup');
-    }
-  });
-
+  const handleSignUpGoogleService = async () => {
+    const response = await SignUpGoogleService();
+    console.log('2 resp: ', response);
+  };
   return (
     <MDBContainer>
       <MDBRow center>
@@ -56,6 +73,16 @@ const SignUp = props => {
                 onSubmit={submitRegister}
                 noValidate
               >
+                <MDBInput
+                  label="name*"
+                  group
+                  type="text"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  error="wrong"
+                  success="right"
+                  required
+                />
                 <MDBInput
                   label="Your email"
                   name="email"
@@ -87,14 +114,14 @@ const SignUp = props => {
                   containerClass="mb-0"
                   required
                 />
-                <div className="text-center mb-3">
+                <div className="text-center mb-3 mt-5">
                   <MDBBtn
                     type="submit"
                     gradient="blue"
                     rounded
                     className="btn-block z-depth-1a"
                   >
-                    Signup
+                    {isLoading ? 'Loading...' : 'Signup'}
                   </MDBBtn>
                 </div>
               </form>
@@ -117,6 +144,7 @@ const SignUp = props => {
                 <MDBBtn
                   type="button"
                   color="white"
+                  onClick={handleSignUpGoogleService}
                   rounded
                   className="z-depth-1a"
                 >

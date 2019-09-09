@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 import { MDBCardTitle } from 'mdbreact';
 import Jumbotron from '../Jumbotron';
-import { verifyService } from '../../services/user.service';
+import { verifyService } from '../../services/auth.service';
 
 const Verification = props => {
   const [message, setMessage] = useState('Wait for it!');
@@ -17,7 +17,8 @@ const Verification = props => {
 
   useEffect(() => {
     verficiateUrl();
-  });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <Jumbotron>

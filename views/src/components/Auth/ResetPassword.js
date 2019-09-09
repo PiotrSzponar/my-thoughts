@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { MDBCardTitle, MDBCardBody, MDBInput, MDBBtn } from 'mdbreact';
 import Jumbotron from '../Jumbotron';
-import { ResetPasswordService } from '../../services/user.service';
+import { ResetPasswordService } from '../../services/auth.service';
 
 const Verification = props => {
   const [password, setPassword] = useState('');
