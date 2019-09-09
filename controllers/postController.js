@@ -1,7 +1,7 @@
 const { body, validationResult } = require('express-validator');
 // const fs = require('fs');
 
-// const User = require('../models/userModel');
+const User = require('../models/userModel');
 const Post = require('../models/postModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
@@ -26,43 +26,45 @@ exports.search = catchAsync(async (req, res, next) => {
     return next(new AppError('Search require at least 3 characters.', 400));
   }
 
-  // If there are spaces at input make alternative regexp like xxx|yyy|zzz
-  const newReg = q.split(' ').join('|');
+  const user = await User.findById(req.user.id).populate({
+    path: 'friends',
+    select: 'recipient'
+  });
 
-  // Search for full words
-  let posts = await Post.find(
+  const userFriends = user.friends.map(obj => obj.recipient);
+  userFriends.push(req.user.id);
+
+  // Search
+  const posts = await Post.find(
     {
-      $text: { $search: q }
+      $text: { $search: q },
+      $or: [
+        {
+          privacy: 'public'
+        },
+        {
+          $and: [{ privacy: 'private' }, { author: req.user.id }]
+        },
+        {
+          $and: [{ privacy: 'friends' }, { author: userFriends }]
+        }
+      ]
     },
     {
       score: { $meta: 'textScore' }
     }
   )
-    .sort({ score: { $meta: 'textScore' } })
+    .sort({ score: { $meta: 'textScore' }, updatedAt: -1 })
     .limit(50);
 
-  // If there are no full words search for part of word
   if (!posts.length) {
-    posts = await Post.find({
-      $or: [
-        { title: { $regex: newReg, $options: 'gi' } },
-        { content: { $regex: newReg, $options: 'gi' } },
-        { tags: { $regex: newReg, $options: 'gi' } }
-      ]
-    }).limit(50);
-
-    // If there is no full words or even part of them - no results
-    if (!posts.length) {
-      return next(new AppError('No results', 404));
-    }
+    return next(new AppError('No results', 404));
   }
-
-  const results = posts.length;
 
   res.status(200).json({
     status: 'success',
     message: 'Searched successfully',
-    results,
+    results: posts.length,
     data: {
       posts
     }
@@ -82,7 +84,9 @@ exports.createPost = catchAsync(async (req, res, next) => {
       )
     );
   }
-  const tags = req.body.tags.toLowerCase().split(' ');
+  const tags = req.body.tags
+    ? req.body.tags.toLowerCase().split(' ')
+    : undefined;
 
   // TODO: Add photo
 
@@ -93,6 +97,11 @@ exports.createPost = catchAsync(async (req, res, next) => {
     privacy: req.body.privacy,
     author: req.user.id
   });
+
+  await User.findOneAndUpdate(
+    { _id: req.user._id },
+    { $push: { posts: newPost._id } }
+  );
 
   newPost.author = undefined;
   newPost.isDeleted = undefined;
@@ -114,12 +123,29 @@ exports.createPost = catchAsync(async (req, res, next) => {
 exports.getPost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id).populate({
     path: 'author',
-    select: 'name photo'
+    select: 'name photo',
+    populate: {
+      path: 'friends',
+      select: 'recipient'
+    }
   });
 
-  if (!post) {
-    return next(new AppError('No post found', 404));
+  // If post author is friend of user?
+  const friend = !!post.author.friends.filter(
+    obj => obj.recipient.toString() === req.user.id
+  ).length;
+
+  if (
+    !post ||
+    (req.user.role !== 'admin' &&
+      post.privacy === 'private' &&
+      post.author.id.toString() !== req.user.id) ||
+    (req.user.role !== 'admin' && post.privacy === 'friends' && !friend)
+  ) {
+    return next(new AppError('Post not found', 404));
   }
+
+  post.author.friends = undefined;
 
   res.status(200).json({
     status: 'success',
@@ -218,6 +244,6 @@ exports.postValidator = [
     .isEmpty()
     .withMessage('Please provide post content!'),
   body('tags')
-    .custom(value => value.split(' ').length <= 10)
+    .custom(value => (value ? value.split(' ').length <= 10 : true))
     .withMessage('Tags exceeds the limit of 10!')
 ];
