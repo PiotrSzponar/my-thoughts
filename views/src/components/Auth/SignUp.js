@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { withRouter } from 'react-router-dom';
 
+import { GoogleLogin } from 'react-google-login';
+
+import config from '../../config/config.json';
+
 import {
   SignUpLocalService,
   SignUpGoogleService
@@ -18,6 +22,9 @@ import {
   MDBModalFooter
 } from 'mdbreact';
 
+const GOOGLE_CLIENT_ID =
+  '523448953860-3b301c7or56k5b7bfb373hj2vbf7q1fj.apps.googleusercontent.com';
+
 const SignUp = props => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -26,6 +33,11 @@ const SignUp = props => {
 
   const [message, setMessage] = useState('');
   const [isLoading, setLoading] = useState(false);
+
+  // store in LocalStorage
+  const [isAuthenticated, setAuthentication] = useState('');
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState('');
 
   const submitRegister = async e => {
     e.preventDefault();
@@ -49,11 +61,18 @@ const SignUp = props => {
     //  setMessage(message);
     setLoading(false);
   };
+  console.log(isAuthenticated, user, token);
 
-  const handleSignUpGoogleService = async () => {
-    const response = await SignUpGoogleService();
-    console.log('2 resp: ', response);
+  const responseGoogle = async response => {
+    const { user, token } = await SignUpGoogleService(response.accessToken);
+
+    if (token) {
+      setAuthentication(true);
+      setUser(user);
+      setToken(token);
+    }
   };
+
   return (
     <MDBContainer>
       <MDBRow center>
@@ -141,10 +160,17 @@ const SignUp = props => {
                     className="blue-text text-center"
                   />
                 </MDBBtn>
+
+                <GoogleLogin
+                  clientId={config.GOOGLE_CLIENT_ID}
+                  buttonText="Login"
+                  onSuccess={responseGoogle}
+                  onFailure={responseGoogle}
+                />
                 <MDBBtn
                   type="button"
                   color="white"
-                  onClick={handleSignUpGoogleService}
+                  onClick={responseGoogle}
                   rounded
                   className="z-depth-1a"
                 >

@@ -1,9 +1,9 @@
 const apiUrl = 'http://localhost:3000/';
 
 const header = {
+  origin: apiUrl,
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
-  cors: 'no-cors'
+  'Access-Control-Allow-Origin': '*'
 };
 
 export const SignUpLocalService = async body => {
@@ -13,6 +13,7 @@ export const SignUpLocalService = async body => {
       headers: header,
       body: JSON.stringify(body)
     });
+
     const data = await response.json();
 
     return data;
@@ -21,26 +22,31 @@ export const SignUpLocalService = async body => {
   }
 };
 
-export const SignUpGoogleService = async body => {
+export const SignUpGoogleService = async token => {
   try {
-    const response = await fetch(`${apiUrl}api/users/signup/google`, {
-      method: 'GET',
-      headers: header
-    });
-    const data = await response.json();
-    console.log(data);
-    return data;
-  } catch (error) {
-    return error;
-  }
-};
-
-export const SignUpFacebookService = async body => {
-  try {
-    const response = await fetch(`${apiUrl}api/users/signup`, {
+    const options = {
       method: 'POST',
       headers: header,
-      body: JSON.stringify(body)
+      body: JSON.stringify({ access_token: token })
+    };
+
+    const response = await fetch(`${apiUrl}api/users/signup/google`, options);
+
+    const googleToken = await response.headers.get('x-auth-token');
+
+    const user = await response.json();
+
+    return { token: googleToken, user };
+  } catch (error) {
+    return error;
+  }
+};
+
+export const SignUpFacebookService = async () => {
+  try {
+    const response = await fetch(`${apiUrl}api/users/signup/facebook`, {
+      method: 'POST',
+      headers: header
     });
     const data = await response.json();
 
