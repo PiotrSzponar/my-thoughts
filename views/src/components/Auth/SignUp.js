@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { withRouter } from 'react-router-dom';
 
+import FacebookLogin from 'react-facebook-login';
+
 import { GoogleLogin } from 'react-google-login';
 
 import config from '../../config/config.json';
 
 import {
   SignUpLocalService,
-  SignUpGoogleService
+  SignUpSocialService
 } from '../../services/auth.service';
 
 import {
@@ -22,9 +24,6 @@ import {
   MDBModalFooter
 } from 'mdbreact';
 
-const GOOGLE_CLIENT_ID =
-  '523448953860-3b301c7or56k5b7bfb373hj2vbf7q1fj.apps.googleusercontent.com';
-
 const SignUp = props => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -33,11 +32,6 @@ const SignUp = props => {
 
   const [message, setMessage] = useState('');
   const [isLoading, setLoading] = useState(false);
-
-  // store in LocalStorage
-  const [isAuthenticated, setAuthentication] = useState('');
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState('');
 
   const submitRegister = async e => {
     e.preventDefault();
@@ -61,15 +55,27 @@ const SignUp = props => {
     //  setMessage(message);
     setLoading(false);
   };
-  console.log(isAuthenticated, user, token);
 
+  const responseFacebook = async response => {
+    console.log(response.accessToken);
+    const { user, token } = await SignUpSocialService(
+      'facebook',
+      response.accessToken
+    );
+    console.log(user, token);
+  };
   const responseGoogle = async response => {
-    const { user, token } = await SignUpGoogleService(response.accessToken);
+    const { user, token } = await SignUpSocialService(
+      'google',
+      response.accessToken
+    );
 
     if (token) {
-      setAuthentication(true);
-      setUser(user);
-      setToken(token);
+      localStorage.setItem('user', user);
+      localStorage.setItem('token', token);
+      localStorage.setItem('auth', true);
+
+      if (user && !user.isCompleted) props.history.push('/complete-signup');
     }
   };
 
@@ -148,34 +154,18 @@ const SignUp = props => {
                 or Sign up with:
               </p>
               <div className="row my-3 d-flex justify-content-center">
-                <MDBBtn
-                  type="button"
-                  color="white"
-                  rounded
-                  className="mr-md-3 z-depth-1a"
-                >
-                  <MDBIcon
-                    fab
-                    icon="facebook-f"
-                    className="blue-text text-center"
-                  />
-                </MDBBtn>
-
+                <FacebookLogin
+                  appId={config.FACEBOOK_APP_ID}
+                  autoLoad={false}
+                  fields="name,email,picture"
+                  callback={responseFacebook}
+                />
                 <GoogleLogin
                   clientId={config.GOOGLE_CLIENT_ID}
                   buttonText="Login"
                   onSuccess={responseGoogle}
                   onFailure={responseGoogle}
                 />
-                <MDBBtn
-                  type="button"
-                  color="white"
-                  onClick={responseGoogle}
-                  rounded
-                  className="z-depth-1a"
-                >
-                  <MDBIcon fab icon="google-plus-g" className="blue-text" />
-                </MDBBtn>
               </div>
             </MDBCardBody>
             <MDBModalFooter className="mx-5 pt-3 mb-1">

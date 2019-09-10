@@ -22,7 +22,7 @@ export const SignUpLocalService = async body => {
   }
 };
 
-export const SignUpGoogleService = async token => {
+export const SignUpSocialService = async (type, token) => {
   try {
     const options = {
       method: 'POST',
@@ -30,27 +30,13 @@ export const SignUpGoogleService = async token => {
       body: JSON.stringify({ access_token: token })
     };
 
-    const response = await fetch(`${apiUrl}api/users/signup/google`, options);
+    const response = await fetch(`${apiUrl}api/users/signup/${type}`, options);
 
-    const googleToken = await response.headers.get('x-auth-token');
+    const newtoken = await response.headers.get('x-auth-token');
 
     const user = await response.json();
 
-    return { token: googleToken, user };
-  } catch (error) {
-    return error;
-  }
-};
-
-export const SignUpFacebookService = async () => {
-  try {
-    const response = await fetch(`${apiUrl}api/users/signup/facebook`, {
-      method: 'POST',
-      headers: header
-    });
-    const data = await response.json();
-
-    return data;
+    return { token: newtoken, user };
   } catch (error) {
     return error;
   }
@@ -125,6 +111,7 @@ export const sendEmailToForgotPasswordService = async body => {
 
 export default {
   SignUpLocalService,
+  SignUpSocialService,
   verifyService,
   sendEmailToVerifyService,
   sendEmailToForgotPasswordService

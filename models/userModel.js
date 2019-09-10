@@ -83,17 +83,65 @@ const userSchema = new mongoose.Schema(
       default: false,
       select: false
     },
-    googleId: {
-      type: String
+    googleProvider: {
+      type: {
+        id: String,
+        token: String
+      },
+      select: false
     },
-    facebookId: {
-      type: String
+    facebookProvider: {
+      type: {
+        id: String,
+        token: String
+      },
+      select: false
     }
   },
   {
     timestamps: true
   }
 );
+
+userSchema.statics.upsertFbUser = function(
+  accessToken,
+  refreshToken,
+  profile,
+  cb
+) {
+  const That = this;
+  return this.findOne(
+    {
+      'facebookProvider.id': profile.id
+    },
+    function(err, user) {
+      // no user was found, lets create a new one
+      if (!user) {
+        const newUser = new That({
+          email: profile.emails[0].value,
+          method: 'facebook',
+          name: profile.displayName,
+          photo: profile.photos ? profile.photos[0].value : 'default.jpg',
+          isCompleted: false,
+          isVerified: true,
+          facebookProvider: {
+            id: profile.id,
+            token: accessToken
+          }
+        });
+
+        newUser.save(function(error, savedUser) {
+          if (error) {
+            console.log(error);
+          }
+          return cb(error, savedUser);
+        });
+      } else {
+        return cb(err, user);
+      }
+    }
+  );
+};
 
 // Before save user to DB check if password filed was changed
 // If was, hash password and remove passwordConfirm (we won't use it)

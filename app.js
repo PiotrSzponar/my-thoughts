@@ -17,12 +17,19 @@ const globalErrorHandler = require('./controllers/errorController');
 const userRouter = require('./routes/userRoutes');
 const friendRouter = require('./routes/friendRoutes');
 
+// eslint-disable-next-line no-unused-vars
 const passportSetup = require('./utils/initPassport');
 
 const app = express();
 
-app.use(cors());
-app.use(passport.initialize());
+const corsOption = {
+  origin: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  exposedHeaders: ['x-auth-token']
+};
+
+app.use(cors(corsOption));
 
 // GLOBAL MIDDLEWARES
 

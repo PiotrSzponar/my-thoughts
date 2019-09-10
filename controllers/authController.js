@@ -30,7 +30,6 @@ const createTokenCookie = (user, statusCode, res) => {
   user.password = undefined;
   user.isVerified = undefined;
   user.isActive = undefined;
-  user.isCompleted = undefined;
 
   res.status(statusCode).json({
     status: 'success',
@@ -57,11 +56,14 @@ exports.restrictTo = (...roles) => {
 
 exports.socialSignin = catchAsync(async (req, res, next) => {
   if (!req.user) {
-    return next(new AppError('Use social login!', 403));
+    return res.send(401, 'User Not Authenticated');
   }
-  createTokenCookie(req.user, 200, res);
-});
+  req.auth = {
+    id: req.user.id
+  };
 
+  next();
+});
 // User registration with email address verification
 exports.signup = catchAsync(async (req, res, next) => {
   // Validation errors
@@ -178,7 +180,7 @@ exports.signin = catchAsync(async (req, res, next) => {
   }
 
   const user = await User.findOne({ email }).select(
-    '+password +isVerified +isActive'
+    '+password +isVerified +isActive +isCompleted'
   );
 
   // Check if user exists or password is correct

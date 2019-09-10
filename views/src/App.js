@@ -4,10 +4,11 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 // import { MDBContainer, MDBRow, MDBCol } from 'mdbreact';
 
 import './App.css';
+import PrivateRoute from './components/Router/PrivateRoute';
 import Navigation from './components/Navigation';
 import SignIn from './components/Auth/SignIn';
 import SignUp from './components/Auth/SignUp';
-import CompleteSignUp from './components/Auth/CompleteSignup';
+import CompleteSignup from './components/Auth/CompleteSignup';
 import Verification from './components/Auth/Verification';
 import ResendVerification from './components/Auth/ResendVerification';
 import ForgotPassword from './components/Auth/ForgotPassword';
@@ -21,7 +22,7 @@ function App() {
         <Route path="/" exact component={SignIn} />
         <Route path="/signin" component={SignIn} />
         <Route path="/signup" component={SignUp} />
-        <Route path="/complete-signup" component={CompleteSignUp} />
+        <PrivateRoute path="/complete-signup" component={CompleteSignup} />
         <Route path="/resend-verification" component={ResendVerification} />
         <Route path="/verification/:id" component={Verification} />
         <Route path="/forgot-password" component={ForgotPassword} />

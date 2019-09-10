@@ -3,44 +3,29 @@ const passport = require('passport');
 const authController = require('../controllers/authController');
 const userController = require('../controllers/userController');
 const fileController = require('../controllers/fileController');
+const { createToken, sendToken } = require('../utils/token.utils');
 
 const router = express.Router();
 
-// Google Auth
-router.get(
-  '/signup/google',
-  passport.authenticate('google', {
-    session: false,
-    scope: ['profile', 'email']
-  })
-);
-// Success Google login
-router.get(
-  '/signup/google/redirect',
-  passport.authenticate('google', {
-    session: false,
-    failureRedirect: '../google'
-  }),
-  authController.socialSignin
-);
+// Google auth
+router
+  .route('/signup/google')
+  .post(
+    passport.authenticate('google-token', { session: false }),
+    authController.socialSignin,
+    createToken,
+    sendToken
+  );
 
 // Facebook Auth
-router.get(
-  '/signup/facebook',
-  passport.authenticate('facebook', {
-    session: false,
-    scope: 'email'
-  })
-);
-// Success Facebook login
-router.get(
-  '/signup/facebook/redirect',
-  passport.authenticate('facebook', {
-    session: false,
-    failureRedirect: '../facebook'
-  }),
-  authController.socialSignin
-);
+router
+  .route('/signup/facebook')
+  .post(
+    passport.authenticate('facebook-token', { session: false }),
+    authController.socialSignin,
+    createToken,
+    sendToken
+  );
 
 // Profile complement after first login (isCompleted: false -> true)
 router.patch(
