@@ -10,8 +10,8 @@ const postSchema = new Schema(
       type: String,
       required: [true, 'Post should contain some text!']
     },
-    photo: {
-      type: String
+    photos: {
+      type: [String]
     },
     tags: {
       type: [String],

@@ -1,7 +1,7 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const postController = require('../controllers/postController');
-// const fileController = require('../controllers/fileController');
+const fileController = require('../controllers/fileController');
 
 const router = express.Router();
 
@@ -11,17 +11,25 @@ router.use(authController.protect);
 // Find posts
 router.get('/search', postController.search);
 
-router.route('/').post(
-  // fileController.uploadUserPhoto,
-  // fileController.resizeUserPhoto,
-  postController.postValidator,
-  postController.createPost
-);
+router
+  .route('/')
+  .get(postController.getAllPostsForUser)
+  .post(
+    fileController.uploadPostPhotos,
+    fileController.resizePostPhotos,
+    postController.postValidator,
+    postController.createPost
+  );
 
 router
   .route('/:id')
   .get(postController.getPost)
-  .patch(postController.postValidator, postController.updatePost)
+  .patch(
+    fileController.uploadPostPhotos,
+    fileController.resizePostPhotos,
+    postController.postValidator,
+    postController.updatePost
+  )
   .delete(postController.deletePost);
 
 module.exports = router;

@@ -1,10 +1,11 @@
 const { body, validationResult } = require('express-validator');
-// const fs = require('fs');
+const fs = require('fs-extra');
 
 const User = require('../models/userModel');
 const Post = require('../models/postModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
+const APIFeatures = require('./../utils/apiFeatures');
 
 // Reduce req.body only to allowed fields
 const filterObj = (obj, ...allowedFields) => {
@@ -32,7 +33,6 @@ exports.search = catchAsync(async (req, res, next) => {
   });
 
   const userFriends = user.friends.map(obj => obj.recipient);
-  userFriends.push(req.user.id);
 
   // Search
   const posts = await Post.find(
@@ -43,7 +43,7 @@ exports.search = catchAsync(async (req, res, next) => {
           privacy: 'public'
         },
         {
-          $and: [{ privacy: 'private' }, { author: req.user.id }]
+          author: req.user.id
         },
         {
           $and: [{ privacy: 'friends' }, { author: userFriends }]
@@ -60,6 +60,19 @@ exports.search = catchAsync(async (req, res, next) => {
   if (!posts.length) {
     return next(new AppError('No results', 404));
   }
+
+  posts.forEach(post => {
+    if (post.author.toString() === user.id) {
+      post._doc.from = 'myself';
+    } else if (
+      post.privacy === 'friends' ||
+      (post.privacy === 'public' && userFriends.includes(post.author))
+    ) {
+      post._doc.from = 'friend';
+    } else {
+      post._doc.from = 'stranger';
+    }
+  });
 
   res.status(200).json({
     status: 'success',
@@ -88,8 +101,6 @@ exports.createPost = catchAsync(async (req, res, next) => {
     ? req.body.tags.toLowerCase().split(' ')
     : undefined;
 
-  // TODO: Add photo
-
   const newPost = await Post.create({
     title: req.body.title,
     content: req.body.content,
@@ -97,6 +108,12 @@ exports.createPost = catchAsync(async (req, res, next) => {
     privacy: req.body.privacy,
     author: req.user.id
   });
+
+  // Add post photos
+  if (req.files) {
+    newPost.photos = req.body.photos;
+    await newPost.save();
+  }
 
   await User.findOneAndUpdate(
     { _id: req.user._id },
@@ -106,9 +123,9 @@ exports.createPost = catchAsync(async (req, res, next) => {
   newPost.author = undefined;
   newPost.isDeleted = undefined;
 
-  res.status(201).json({
+  res.status(200).json({
     status: 'success',
-    message: 'Post created',
+    message: 'Thanks for sharing your thoughts!',
     data: {
       author: {
         id: req.user.id,
@@ -155,6 +172,54 @@ exports.getPost = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getAllPostsForUser = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user.id).populate({
+    path: 'friends',
+    select: 'recipient'
+  });
+
+  const userFriends = user.friends.map(obj => obj.recipient);
+
+  const features = new APIFeatures(
+    Post.find({
+      $or: [
+        {
+          privacy: 'public'
+        },
+        {
+          author: user.id
+        },
+        {
+          $and: [{ privacy: 'friends' }, { author: userFriends }]
+        }
+      ]
+    }).sort({ updatedAt: -1 }),
+    req.query
+  ).paginate();
+
+  const posts = await features.query;
+
+  posts.forEach(post => {
+    if (post.author.toString() === user.id) {
+      post._doc.from = 'myself';
+    } else if (
+      post.privacy === 'friends' ||
+      (post.privacy === 'public' && userFriends.includes(post.author))
+    ) {
+      post._doc.from = 'friend';
+    } else {
+      post._doc.from = 'stranger';
+    }
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      posts
+    }
+  });
+});
+
 exports.updatePost = catchAsync(async (req, res, next) => {
   // Validation errors
   if (!validationResult(req).isEmpty()) {
@@ -169,13 +234,7 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     );
   }
 
-  const filteredBody = filterObj(
-    req.body,
-    'title',
-    'content',
-    'photo',
-    'privacy'
-  );
+  const filteredBody = filterObj(req.body, 'title', 'content', 'privacy');
 
   if (req.body.tags) {
     filteredBody.tags = req.body.tags.toLowerCase().split(' ');
@@ -197,10 +256,49 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     return next(new AppError('No post found to update', 404));
   }
 
+  // // Delete photo
+  // if (req.body.deletePhotos && req.body.deletePhotos === 'true') {
+  //   fs.remove(`public/images/posts/${req.post.id}/`, err => {
+  //     if (err) return next(new AppError('Photo not found', 404));
+  //   });
+  //   updatedPost.photos = [];
+  //   await updatedPost.save();
+  // }
+
+  // Add post photos
+  if (req.files.photos) {
+    updatedPost.photos = req.body.photos;
+    await updatedPost.save();
+  }
+
   res.status(200).json({
     status: 'success',
     data: {
       post: updatedPost
+    }
+  });
+});
+
+exports.addPhotos = catchAsync(async (req, res, next) => {
+  // Add post photos
+  if (req.files.photos) {
+    req.post.photos = req.body.photos;
+    await req.post.save();
+  }
+
+  req.post.author = undefined;
+  req.post.isDeleted = undefined;
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Thanks for sharing your thoughts!',
+    data: {
+      author: {
+        id: req.user.id,
+        name: req.user.name,
+        photo: req.user.photo
+      },
+      post: req.post
     }
   });
 });

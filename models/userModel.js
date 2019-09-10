@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const fs = require('fs');
+const fs = require('fs-extra');
 const request = require('request');
 const sharp = require('sharp');
 
@@ -122,7 +122,7 @@ userSchema.pre('save', function(next) {
   const oldPhoto = this._photo;
 
   if (oldPhoto !== 'default.jpg') {
-    fs.unlink(`public/images/users/${oldPhoto}`, err => {
+    fs.remove(`public/images/users/${oldPhoto}`, err => {
       if (err) return next(new AppError('Photo not found', 404));
     });
   }
