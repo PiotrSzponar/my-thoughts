@@ -7,15 +7,6 @@ const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const APIFeatures = require('./../utils/apiFeatures');
 
-// Reduce req.body only to allowed fields
-const filterObj = (obj, ...allowedFields) => {
-  const newObj = {};
-  Object.keys(obj).forEach(el => {
-    if (allowedFields.includes(el)) newObj[el] = obj[el];
-  });
-  return newObj;
-};
-
 // Search posts by title, content or tags
 exports.search = catchAsync(async (req, res, next) => {
   const q = req.query.q ? req.query.q.trim() : undefined;
@@ -110,9 +101,29 @@ exports.createPost = catchAsync(async (req, res, next) => {
   });
 
   // Add post photos
-  if (req.files) {
-    newPost.photos = req.body.photos;
+  if (req.files.length > 0) {
+    const newPhotos = [];
+
+    await Promise.all(
+      req.body.photos.map(async (photo, i) => {
+        const fileName = `post-${newPost.id}-${Date.now()}-${i + 1}.jpeg`;
+        fs.move(
+          `public/images/posts/${req.user.id}/${photo}`,
+          `public/images/posts/${newPost.id}/${fileName}`,
+          err => {
+            if (err) return next(new AppError('Move files error!', 404));
+          }
+        );
+        newPhotos.push(fileName);
+      })
+    );
+
+    newPost.photos = newPhotos;
     await newPost.save();
+
+    fs.remove(`public/images/posts/${req.user.id}`, err => {
+      if (err) return next(new AppError('Directory not found', 404));
+    });
   }
 
   await User.findOneAndUpdate(
@@ -221,24 +232,18 @@ exports.getAllPostsForUser = catchAsync(async (req, res, next) => {
 });
 
 exports.updatePost = catchAsync(async (req, res, next) => {
-  // Validation errors
-  if (!validationResult(req).isEmpty()) {
-    return next(
-      new AppError(
-        'Validation failed!',
-        422,
-        validationResult(req)
-          .formatWith(({ msg }) => msg)
-          .mapped()
-      )
-    );
+  const post = await Post.findById(req.params.id);
+
+  if (post.author.toString() !== req.user.id) {
+    return next(new AppError('You can update only own posts.', 400));
   }
 
-  const filteredBody = filterObj(req.body, 'title', 'content', 'privacy');
-
-  if (req.body.tags) {
-    filteredBody.tags = req.body.tags.toLowerCase().split(' ');
-  }
+  const filteredBody = {};
+  if (req.body.title) filteredBody.title = req.body.title;
+  if (req.body.content) filteredBody.content = req.body.content;
+  if (req.body.privacy) filteredBody.privacy = req.body.privacy;
+  if (req.body.tags) filteredBody.tags = req.body.tags.toLowerCase().split(' ');
+  if (req.body.deletePhotos) filteredBody.deletePhotos = req.body.deletePhotos;
 
   // Update post document and returned the new one
   const updatedPost =
@@ -256,18 +261,41 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     return next(new AppError('No post found to update', 404));
   }
 
-  // // Delete photo
-  // if (req.body.deletePhotos && req.body.deletePhotos === 'true') {
-  //   fs.remove(`public/images/posts/${req.post.id}/`, err => {
-  //     if (err) return next(new AppError('Photo not found', 404));
-  //   });
-  //   updatedPost.photos = [];
-  //   await updatedPost.save();
-  // }
+  // Delete old files and add new ones
+  if (req.files.length > 0) {
+    await Promise.all(
+      updatedPost.photos.map(async photo => {
+        await fs.remove(`public/images/posts/${updatedPost.id}/${photo}`);
+      })
+    );
 
-  // Add post photos
-  if (req.files.photos) {
-    updatedPost.photos = req.body.photos;
+    const newPhotos = [];
+
+    await Promise.all(
+      req.body.photos.map(async (photo, i) => {
+        const fileName = `post-${updatedPost.id}-${Date.now()}-${i + 1}.jpeg`;
+        await fs.move(
+          `public/images/posts/${req.user.id}/${photo}`,
+          `public/images/posts/${updatedPost.id}/${fileName}`
+        );
+        newPhotos.push(fileName);
+      })
+    );
+
+    updatedPost.photos = newPhotos;
+    await updatedPost.save();
+
+    fs.remove(`public/images/posts/${req.user.id}`, err => {
+      if (err) return next(new AppError('Directory not found.', 404));
+    });
+  }
+
+  // Delete photos
+  if (req.body.deletePhotos && req.body.deletePhotos === 'true') {
+    fs.remove(`public/images/posts/${updatedPost.id}`, err => {
+      if (err) return next(new AppError('Directory not found.', 404));
+    });
+    updatedPost.photos = [];
     await updatedPost.save();
   }
 
@@ -275,30 +303,6 @@ exports.updatePost = catchAsync(async (req, res, next) => {
     status: 'success',
     data: {
       post: updatedPost
-    }
-  });
-});
-
-exports.addPhotos = catchAsync(async (req, res, next) => {
-  // Add post photos
-  if (req.files.photos) {
-    req.post.photos = req.body.photos;
-    await req.post.save();
-  }
-
-  req.post.author = undefined;
-  req.post.isDeleted = undefined;
-
-  res.status(200).json({
-    status: 'success',
-    message: 'Thanks for sharing your thoughts!',
-    data: {
-      author: {
-        id: req.user.id,
-        name: req.user.name,
-        photo: req.user.photo
-      },
-      post: req.post
     }
   });
 });
@@ -316,7 +320,7 @@ exports.deletePost = catchAsync(async (req, res, next) => {
   }
 
   if (post.author.toString() !== req.user.id) {
-    return next(new AppError('You can delete only own posts', 400));
+    return next(new AppError('You can delete only own posts.', 400));
   }
 
   await post.updateOne({

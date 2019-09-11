@@ -29,6 +29,7 @@
     "passport-google-oauth2": "^0.2.0",
     "request": "^2.88.0",
     "sharp": "^0.23.0",
+    "uuid": "^3.3.3",
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {

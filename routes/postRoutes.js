@@ -27,7 +27,6 @@ router
   .patch(
     fileController.uploadPostPhotos,
     fileController.resizePostPhotos,
-    postController.postValidator,
     postController.updatePost
   )
   .delete(postController.deletePost);

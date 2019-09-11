@@ -11,7 +11,13 @@ const postSchema = new Schema(
       required: [true, 'Post should contain some text!']
     },
     photos: {
-      type: [String]
+      type: [String],
+      validate: {
+        validator: function(el) {
+          return el.length <= 3;
+        },
+        message: 'Photos exceeds the limit of 3!'
+      }
     },
     tags: {
       type: [String],

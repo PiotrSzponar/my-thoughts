@@ -144,6 +144,7 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   const filteredBody =
     req.route.path === '/me' &&
     filterObj(req.body, 'bio', 'country', 'city', 'isHidden', 'deletePhoto');
+  if (req.body.name) filteredBody.name = req.body.name;
   if (req.body.gender) filteredBody.gender = req.body.gender;
   if (req.body.birthDate) filteredBody.birthDate = req.body.birthDate;
 

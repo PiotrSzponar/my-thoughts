@@ -1,6 +1,7 @@
 const multer = require('multer');
 const sharp = require('sharp');
 const fs = require('fs-extra');
+const uuidv4 = require('uuid/v4');
 
 const AppError = require('./../utils/appError');
 const catchAsync = require('../utils/catchAsync');
@@ -44,17 +45,17 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
 exports.uploadPostPhotos = upload.array('photos', 3);
 
 exports.resizePostPhotos = catchAsync(async (req, res, next) => {
-  if (!req.files) return next();
+  if (req.files.length === 0) return next();
 
   req.body.photos = [];
 
-  await fs.mkdirp(`public/images/posts/${req.user.id}`, err => {
+  fs.mkdirp(`public/images/posts/${req.user.id}`, err => {
     if (err) return next(new AppError('Directory create failed', 400));
   });
 
   await Promise.all(
-    req.files.map(async (file, i) => {
-      const fileName = `post-${req.user.id}-${Date.now()}-${i + 1}.jpeg`;
+    req.files.map(async file => {
+      const fileName = `post-${uuidv4()}-${Date.now()}.jpeg`;
 
       await sharp(file.buffer)
         .resize(750, 750)
