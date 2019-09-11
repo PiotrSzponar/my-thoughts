@@ -75,6 +75,7 @@ exports.search = catchAsync(async (req, res, next) => {
   });
 });
 
+// Create new post
 exports.createPost = catchAsync(async (req, res, next) => {
   // Validation errors
   if (!validationResult(req).isEmpty()) {
@@ -148,6 +149,7 @@ exports.createPost = catchAsync(async (req, res, next) => {
   });
 });
 
+// Show appropriate post to user
 exports.getPost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id).populate({
     path: 'author',
@@ -186,6 +188,7 @@ exports.getPost = catchAsync(async (req, res, next) => {
   });
 });
 
+// Post wall
 exports.getAllPostsForUser = catchAsync(async (req, res, next) => {
   const user = await User.findById(req.user.id).populate({
     path: 'friends',
@@ -237,6 +240,7 @@ exports.getAllPostsForUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// Update own post
 exports.updatePost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id);
 
@@ -314,6 +318,9 @@ exports.updatePost = catchAsync(async (req, res, next) => {
   });
 });
 
+// Delete post
+// User can hide post (state: delete)
+// Admin can remove post from DB
 exports.deletePost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id);
 
@@ -347,6 +354,7 @@ exports.deletePost = catchAsync(async (req, res, next) => {
   });
 });
 
+// Change post state to publish
 exports.publishPost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id);
 
@@ -374,6 +382,7 @@ exports.publishPost = catchAsync(async (req, res, next) => {
   });
 });
 
+// Change post state to draft
 exports.draftPost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id);
 

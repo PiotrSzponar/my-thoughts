@@ -299,6 +299,7 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get appropriate post from logged in or provided user
 exports.getUserPosts = catchAsync(async (req, res, next) => {
   const userId = req.route.path === '/me/posts' ? req.user.id : req.params.id;
 
@@ -314,7 +315,10 @@ exports.getUserPosts = catchAsync(async (req, res, next) => {
       author: userId,
       $or: [
         {
-          privacy: 'public'
+          $and: [{ privacy: 'public' }, { state: 'publish' }]
+        },
+        {
+          $and: [{ state: 'draft' }, { author: user.id }]
         },
         {
           $and: [{ privacy: 'private' }, { author: req.user.id }]

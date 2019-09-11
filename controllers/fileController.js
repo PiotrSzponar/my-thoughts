@@ -6,8 +6,10 @@ const uuidv4 = require('uuid/v4');
 const AppError = require('./../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 
+// Save uploaded files to memory (temp)
 const multerStorage = multer.memoryStorage();
 
+// Pass only images
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image')) {
     cb(null, true);
@@ -16,16 +18,18 @@ const multerFilter = (req, file, cb) => {
   }
 };
 
+// Init memory storage, filters and size limit to 3MB
 const upload = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
-  limits: { fileSize: 1000000 }
+  limits: { fileSize: 3000000 }
 });
 
 // User photo
-
+// Pass only 1 photo
 exports.uploadUserPhoto = upload.single('photo');
-
+// Filename: user-[user id]-[timestamp].jpeg
+// Resize photo to 250x250, jpeg, quality 60% and save to image/users/
 exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
   if (!req.file) return next();
 
@@ -41,9 +45,11 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
 });
 
 // Post photos
-
+// Pass only 3 photos
 exports.uploadPostPhotos = upload.array('photos', 3);
-
+// Create temp dir: images/posts/[user id]/
+// Temp filename: post-[uuid4]-[timestamp].jpeg
+// Resize photo to 750x750, jpeg, quality 75% and save to temp dir
 exports.resizePostPhotos = catchAsync(async (req, res, next) => {
   if (req.files.length === 0) return next();
 
