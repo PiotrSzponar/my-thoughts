@@ -31,7 +31,7 @@ exports.search = catchAsync(async (req, res, next) => {
       $text: { $search: q },
       $or: [
         {
-          privacy: 'public'
+          $and: [{ privacy: 'public' }, { state: 'publish' }]
         },
         {
           author: req.user.id
@@ -97,7 +97,8 @@ exports.createPost = catchAsync(async (req, res, next) => {
     content: req.body.content,
     tags,
     privacy: req.body.privacy,
-    author: req.user.id
+    author: req.user.id,
+    state: req.body.state
   });
 
   // Add post photos
@@ -132,7 +133,6 @@ exports.createPost = catchAsync(async (req, res, next) => {
   );
 
   newPost.author = undefined;
-  newPost.isDeleted = undefined;
 
   res.status(200).json({
     status: 'success',
@@ -158,15 +158,18 @@ exports.getPost = catchAsync(async (req, res, next) => {
     }
   });
 
+  if (!post) {
+    return next(new AppError('No post found to show.', 404));
+  }
+
   // If post author is friend of user?
   const friend = !!post.author.friends.filter(
     obj => obj.recipient.toString() === req.user.id
   ).length;
 
   if (
-    !post ||
     (req.user.role !== 'admin' &&
-      post.privacy === 'private' &&
+      (post.privacy === 'private' || post.state === 'draft') &&
       post.author.id.toString() !== req.user.id) ||
     (req.user.role !== 'admin' && post.privacy === 'friends' && !friend)
   ) {
@@ -195,10 +198,13 @@ exports.getAllPostsForUser = catchAsync(async (req, res, next) => {
     Post.find({
       $or: [
         {
-          privacy: 'public'
+          $and: [{ privacy: 'public' }, { state: 'publish' }]
         },
         {
           author: user.id
+        },
+        {
+          $and: [{ state: 'draft' }, { author: user.id }]
         },
         {
           $and: [{ privacy: 'friends' }, { author: userFriends }]
@@ -234,6 +240,10 @@ exports.getAllPostsForUser = catchAsync(async (req, res, next) => {
 exports.updatePost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id);
 
+  if (!post) {
+    return next(new AppError('No post found to update', 404));
+  }
+
   if (post.author.toString() !== req.user.id) {
     return next(new AppError('You can update only own posts.', 400));
   }
@@ -244,6 +254,7 @@ exports.updatePost = catchAsync(async (req, res, next) => {
   if (req.body.privacy) filteredBody.privacy = req.body.privacy;
   if (req.body.tags) filteredBody.tags = req.body.tags.toLowerCase().split(' ');
   if (req.body.deletePhotos) filteredBody.deletePhotos = req.body.deletePhotos;
+  if (req.body.state) filteredBody.state = req.body.state;
 
   // Update post document and returned the new one
   const updatedPost =
@@ -256,10 +267,6 @@ exports.updatePost = catchAsync(async (req, res, next) => {
           new: true,
           runValidators: true
         });
-
-  if (!updatedPost) {
-    return next(new AppError('No post found to update', 404));
-  }
 
   // Delete old files and add new ones
   if (req.files.length > 0) {
@@ -310,6 +317,10 @@ exports.updatePost = catchAsync(async (req, res, next) => {
 exports.deletePost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id);
 
+  if (!post) {
+    return next(new AppError('No post found to delete', 404));
+  }
+
   if (req.user.role === 'admin') {
     await post.deleteOne();
 
@@ -324,12 +335,68 @@ exports.deletePost = catchAsync(async (req, res, next) => {
   }
 
   await post.updateOne({
-    isDeleted: true
+    state: 'delete'
   });
+
+  post.state = 'delete';
 
   res.status(200).json({
     status: 'success',
     message: 'Post deleted',
+    data: post
+  });
+});
+
+exports.publishPost = catchAsync(async (req, res, next) => {
+  const post = await Post.findById(req.params.id);
+
+  if (!post) {
+    return next(new AppError('No post found to publish.', 404));
+  }
+
+  if (post.author.toString() !== req.user.id) {
+    return next(new AppError('You can publish only own posts', 400));
+  }
+  if (post.state !== 'draft') {
+    return next(
+      new AppError('Can not publish posts which are not draft.', 400)
+    );
+  }
+
+  await post.updateOne({ state: 'publish' });
+
+  post.state = 'publish';
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Post has been published!',
+    data: post
+  });
+});
+
+exports.draftPost = catchAsync(async (req, res, next) => {
+  const post = await Post.findById(req.params.id);
+
+  if (!post) {
+    return next(new AppError('No post found to draft.', 404));
+  }
+
+  if (post.author.toString() !== req.user.id) {
+    return next(new AppError('You can draft only own posts', 400));
+  }
+  if (post.state !== 'publish') {
+    return next(
+      new AppError('Can not draft posts which are not publish.', 400)
+    );
+  }
+
+  await post.updateOne({ state: 'draft' });
+
+  post.state = 'draft';
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Post has been drafted!',
     data: post
   });
 });

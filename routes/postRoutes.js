@@ -31,4 +31,7 @@ router
   )
   .delete(postController.deletePost);
 
+router.patch('/:id/publish', postController.publishPost);
+router.patch('/:id/draft', postController.draftPost);
+
 module.exports = router;
