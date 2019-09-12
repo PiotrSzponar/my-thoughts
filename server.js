@@ -1,6 +1,9 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const initAdmin = require('./utils/initAdmin');
+const schedule = require('node-schedule');
+
+const dailyJob = require('./jobs/daily');
 
 dotenv.config({ path: './config/dev.env' });
 
@@ -33,11 +36,14 @@ const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
 
-// Unhandled promise rejection e.g. DB login failed
-process.on('unhandledRejection', err => {
-  console.log('UNHANDLED REJECTION! Shutting down...');
-  console.log(`${err.name}: ${err.message}`);
-  server.close(() => {
-    process.exit(1);
-  });
-});
+//Schedule Jobs
+dailyJob;
+
+// Unhandled promise rejection e.g.DB login failed
+// process.on('unhandledRejection', err => {
+//   console.log('UNHANDLED REJECTION! Shutting down...');
+//   console.log(`${err.name}: ${err.message}`);
+//   server.close(() => {
+//     process.exit(1);
+//   });
+// });

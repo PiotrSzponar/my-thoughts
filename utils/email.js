@@ -123,4 +123,22 @@ module.exports = class Email {
       `
     );
   }
+
+  async sendDaily(posts) {
+    await this.send(
+      `Your Daily Summary of Posts!`,
+      `
+      <center>
+      <h1>.::My Thoughts::.</h1>
+      <h3>Welcome ${this.name}! Your daily posts info:</h3>
+      </center>
+      <ul>${posts}</ul>
+      <br>
+      <p>If you want to resign from Daily Summary click this link: <a href="${this.url}">Resign</a><p>
+      <hr>
+      
+      <p>If you didn't request this, please ignore this email.</p>
+      `
+    );
+  }
 };
