@@ -5,11 +5,11 @@ const Post = require('../models/postModel');
 
 
 
-const dailyJob = schedule.scheduleJob('* * 24 * * *', async function () {
+const dailyJob = schedule.scheduleJob('*/10 * * * * *', async function () {
     const posts = await getPosts();
     const users = await getUsers();
-    //Ask about url without req object
-    const url = 'http://localhost:3000/api/posts/'
+
+    const url = process.env.LOCAL_URL + '/api/posts/';
 
     const postsHTMLArray = posts.map(post => {
         return `<li><a href="${url}${post.id}">${post.title} posted by:${post.author.name}</a></li>`
@@ -18,6 +18,9 @@ const dailyJob = schedule.scheduleJob('* * 24 * * *', async function () {
 
     //in for loop when i will be able to sent email more than once
     await new Email(users, "urltoResign").sendDaily(rawHTML);
+
+    // to do in email : sanitize befor send
+
 
 })
 

@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const initAdmin = require('./utils/initAdmin');
-const schedule = require('node-schedule');
 
 const dailyJob = require('./jobs/daily');
 
@@ -36,8 +35,6 @@ const server = app.listen(port, () => {
   console.log(`App running on port ${port}...`);
 });
 
-//Schedule Jobs
-dailyJob;
 
 //Unhandled promise rejection e.g.DB login failed
 process.on('unhandledRejection', err => {
