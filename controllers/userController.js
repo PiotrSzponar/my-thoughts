@@ -287,7 +287,6 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
     }
   } else {
     await User.findByIdAndUpdate(req.user.id, { isActive: false });
-    res.clearCookie('jwt');
   }
 
   const userAction = user === null ? 'deactivated' : 'deleted';

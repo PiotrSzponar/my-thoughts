@@ -63,9 +63,6 @@ router.post('/resend-verification', authController.resendVerification);
 // User Sign In (local)
 router.post('/signin', authController.signin);
 
-// User Sign Out
-router.get('/signout', authController.signout);
-
 // Forgot password: provide user email and get the message...
 router.post('/forgot-password', authController.forgotPassword);
 // ...with token that confirm user. Then change password.

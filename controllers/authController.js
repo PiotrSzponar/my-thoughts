@@ -11,22 +11,11 @@ const signToken = (id, expiresTime = process.env.JWT_LOGIN_EXPIRES_IN) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: expiresTime });
 };
 
-// Create cookie with JWT token
-const createTokenCookie = (user, statusCode, res) => {
+// Create response with JWT token and user info
+const resWithToken = (user, statusCode, res) => {
   const token = signToken(user._id);
-  const cookieOptions = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true
-  };
 
-  // If production is https:
-  // if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
-
-  res.cookie('jwt', token, cookieOptions);
-
-  // Remove password and isVerified from output
+  // Remove sensitive fields from output
   user.password = undefined;
   user.isVerified = undefined;
   user.isActive = undefined;
@@ -40,7 +29,7 @@ const createTokenCookie = (user, statusCode, res) => {
     }
   });
 };
-exports.createTokenCookie = createTokenCookie;
+exports.resWithToken = resWithToken;
 
 // Check if user has required field
 exports.restrictTo = (...roles) => {
@@ -59,7 +48,7 @@ exports.socialSignin = catchAsync(async (req, res, next) => {
   if (!req.user) {
     return next(new AppError('Use social login!', 403));
   }
-  createTokenCookie(req.user, 200, res);
+  resWithToken(req.user, 200, res);
 });
 
 // User registration with email address verification
@@ -199,27 +188,16 @@ exports.signin = catchAsync(async (req, res, next) => {
     return next(new AppError('User used social login', 400));
   }
 
-  createTokenCookie(user, 200, res);
+  resWithToken(user, 200, res);
 });
-
-// User sign out - clear JWT cookie
-exports.signout = (req, res) => {
-  res.clearCookie('jwt');
-  res.status(200).json({ status: 'success' });
-};
 
 // Protect routes - only signed in users can get access
 exports.protect = catchAsync(async (req, res, next) => {
   // Getting token and check of it's there
-  let token;
-  if (req.cookies.jwt) {
-    token = req.cookies.jwt;
-  }
+  const token = req.header('x-auth-token');
 
   if (!token) {
-    return next(
-      new AppError('You are not logged in! Please log in to get access.', 401)
-    );
+    return next(new AppError('You are not logged in! Access denied.', 401));
   }
 
   // Verification token
@@ -228,12 +206,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   // Check if user still exists
   const currentUser = await User.findById(decoded.id).select('+isCompleted');
   if (!currentUser) {
-    return next(
-      new AppError(
-        'The user belonging to this token does no longer exist.',
-        401
-      )
-    );
+    return next(new AppError('The user does no exist.', 401));
   }
 
   // Allow uncompleted user to enter only social-complete form
