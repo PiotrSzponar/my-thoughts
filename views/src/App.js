@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+
+import MyContext from './hooks/myContext';
 
 // import { MDBContainer, MDBRow, MDBCol } from 'mdbreact';
 
@@ -14,21 +16,37 @@ import ResendVerification from './components/Auth/ResendVerification';
 import ForgotPassword from './components/Auth/ForgotPassword';
 import ResetPassword from './components/Auth/ResetPassword';
 
+import Dashboard from './pages/dashboard';
+import Posts from './pages/posts';
+import userProfile from './pages/userProfile';
+
 function App() {
+  const [isLoggedIn, setAuth] = useState(false);
+
   return (
-    <Router>
-      <Navigation />
-      <Switch>
-        <Route path="/" exact component={SignIn} />
-        <Route path="/signin" component={SignIn} />
-        <Route path="/signup" component={SignUp} />
-        <PrivateRoute path="/complete-signup" component={CompleteSignup} />
-        <Route path="/resend-verification" component={ResendVerification} />
-        <Route path="/verification/:id" component={Verification} />
-        <Route path="/forgot-password" component={ForgotPassword} />
-        <Route path="/reset-password/:id" component={ResetPassword} />
-      </Switch>
-    </Router>
+    <MyContext.Provider value={{ isLoggedIn, setAuth }}>
+      <Router>
+        <Navigation />
+        <Switch>
+          <Route
+            path="/"
+            exact
+            render={props =>
+              isLoggedIn ? <Dashboard {...props} /> : <SignIn {...props} />
+            }
+          />
+          <Route path="/signin" component={SignIn} />
+          <Route path="/signup" component={SignUp} />
+          <PrivateRoute path="/complete-signup" component={CompleteSignup} />
+          <Route path="/resend-verification" component={ResendVerification} />
+          <Route path="/verification/:id" component={Verification} />
+          <PrivateRoute path="/posts" component={Posts} />
+          <PrivateRoute path="/user/:id" component={userProfile} />
+          <Route path="/forgot-password" component={ForgotPassword} />
+          <Route path="/reset-password/:id" component={ResetPassword} />
+        </Switch>
+      </Router>
+    </MyContext.Provider>
   );
 }
 
