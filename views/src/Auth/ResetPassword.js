@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 
 import { MDBCardTitle, MDBCardBody, MDBInput, MDBBtn } from 'mdbreact';
-import Jumbotron from '../Jumbotron';
-import { ResetPasswordService } from '../../services/auth.service';
+import Jumbotron from '../components/Jumbotron';
+import { ResetPasswordService } from '../services/auth.service';
 
 const Verification = props => {
   const [password, setPassword] = useState('');
@@ -23,7 +23,7 @@ const Verification = props => {
       });
       setMessage(resp);
     } else {
-      setMessage('Wrong passwords');
+      setMessage('passwords do not match');
     }
     setIsLoading(true);
   };

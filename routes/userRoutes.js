@@ -8,24 +8,26 @@ const { createToken, sendToken } = require('../utils/token.utils');
 const router = express.Router();
 
 // Google auth
-router
-  .route('/signup/google')
-  .post(
-    passport.authenticate('google-token', { session: false }),
-    authController.socialSignin,
-    createToken,
-    sendToken
-  );
+router.route('/signup/google').post(
+  passport.authenticate('google-token', {
+    session: false,
+    failureRedirect: '../google'
+  }),
+  authController.socialSignin,
+  createToken,
+  sendToken
+);
 
 // Facebook Auth
-router
-  .route('/signup/facebook')
-  .post(
-    passport.authenticate('facebook-token', { session: false }),
-    authController.socialSignin,
-    createToken,
-    sendToken
-  );
+router.route('/signup/facebook').post(
+  passport.authenticate('facebook-token', {
+    session: false,
+    failureRedirect: '../facebook'
+  }),
+  authController.socialSignin,
+  createToken,
+  sendToken
+);
 
 // Profile complement after first login (isCompleted: false -> true)
 router.patch(
@@ -46,7 +48,7 @@ router.patch('/verification/:token', authController.verification);
 router.post('/resend-verification', authController.resendVerification);
 
 // User Sign In (local)
-router.post('/signin', authController.signin);
+router.post('/signin', authController.signin, createToken, sendToken);
 
 // User Sign Out
 router.get('/signout', authController.signout);

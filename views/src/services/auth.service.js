@@ -1,14 +1,15 @@
-const apiUrl = 'http://localhost:3000/';
+import { setSession } from './session.service';
+import config from '../config/config.json';
 
 const header = {
-  origin: apiUrl,
+  origin: config.API_URL,
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*'
 };
 
-export const SignUpLocalService = async body => {
+export const authLocalService = async body => {
   try {
-    const response = await fetch(`${apiUrl}api/users/signup`, {
+    const response = await fetch(`${config.API_URL}api/users/signup`, {
       method: 'POST',
       headers: header,
       body: JSON.stringify(body)
@@ -22,7 +23,40 @@ export const SignUpLocalService = async body => {
   }
 };
 
-export const SignUpSocialService = async (type, token) => {
+export const signinService = async body => {
+  try {
+    const response = await fetch(`${config.API_URL}api/users/signin`, {
+      method: 'POST',
+      headers: header,
+      body: JSON.stringify(body)
+    });
+    const { data, status, error } = await response.json();
+
+    const newtoken = await response.headers.get('x-auth-token');
+
+    const result = {
+      path: '/',
+      authorized: false,
+      message: ''
+    };
+
+    if (status === 'fail') {
+      result.message = error.message;
+    }
+
+    if (data.user && !data.user.isCompleted) {
+      result.path = '/complete-signup';
+    }
+
+    await setSession({ auth: true, token: newtoken });
+    result.authorized = true;
+    return result;
+  } catch (error) {
+    return error;
+  }
+};
+
+export const authSocialService = async (type, token) => {
   try {
     const options = {
       method: 'POST',
@@ -30,13 +64,36 @@ export const SignUpSocialService = async (type, token) => {
       body: JSON.stringify({ access_token: token })
     };
 
-    const response = await fetch(`${apiUrl}api/users/signup/${type}`, options);
+    const response = await fetch(
+      `${config.API_URL}api/users/signup/${type}`,
+      options
+    );
 
     const newtoken = await response.headers.get('x-auth-token');
 
-    const user = await response.json();
+    const { data, status, error } = await response.json();
 
-    return { token: newtoken, user };
+    let result = {
+      path: '/',
+      authorized: false
+    };
+
+    if (status === 'fail') {
+      result.message = error.message;
+      return;
+    }
+
+    if (token) {
+      await setSession({ auth: true, user: data.user, token: newtoken });
+      result.authorized = true;
+
+      if (data.user && !data.user.isCompleted) {
+        result.path = '/complete-signup';
+      }
+      return result;
+    }
+
+    return result;
   } catch (error) {
     return error;
   }
@@ -44,10 +101,13 @@ export const SignUpSocialService = async (type, token) => {
 
 export const verifyService = async id => {
   try {
-    const response = await fetch(`${apiUrl}api/users/verification/${id}`, {
-      method: 'PATCH',
-      headers: header
-    });
+    const response = await fetch(
+      `${config.API_URL}api/users/verification/${id}`,
+      {
+        method: 'PATCH',
+        headers: header
+      }
+    );
     const { status, message } = await response.json();
 
     if (status !== 'ok') throw new Error(message);
@@ -60,11 +120,14 @@ export const verifyService = async id => {
 
 export const ResetPasswordService = async (id, body) => {
   try {
-    const response = await fetch(`${apiUrl}api/users/reset-password/${id}`, {
-      method: 'PATCH',
-      headers: header,
-      body: JSON.stringify(body)
-    });
+    const response = await fetch(
+      `${config.API_URL}api/users/reset-password/${id}`,
+      {
+        method: 'PATCH',
+        headers: header,
+        body: JSON.stringify(body)
+      }
+    );
     const { status, message } = await response.json();
 
     if (status !== 'ok') throw new Error(message);
@@ -77,11 +140,14 @@ export const ResetPasswordService = async (id, body) => {
 
 export const sendEmailToVerifyService = async body => {
   try {
-    const response = await fetch(`${apiUrl}api/users/resend-verification`, {
-      method: 'POST',
-      headers: header,
-      body: JSON.stringify(body)
-    });
+    const response = await fetch(
+      `${config.API_URL}api/users/resend-verification`,
+      {
+        method: 'POST',
+        headers: header,
+        body: JSON.stringify(body)
+      }
+    );
 
     const { status, message } = await response.json();
     if (status !== 'ok') throw new Error(message);
@@ -94,7 +160,7 @@ export const sendEmailToVerifyService = async body => {
 
 export const sendEmailToForgotPasswordService = async body => {
   try {
-    const response = await fetch(`${apiUrl}api/users/forgot-password`, {
+    const response = await fetch(`${config.API_URL}api/users/forgot-password`, {
       method: 'POST',
       headers: header,
       body: JSON.stringify(body)
@@ -107,12 +173,4 @@ export const sendEmailToForgotPasswordService = async body => {
   } catch (error) {
     return error.message;
   }
-};
-
-export default {
-  SignUpLocalService,
-  SignUpSocialService,
-  verifyService,
-  sendEmailToVerifyService,
-  sendEmailToForgotPasswordService
 };

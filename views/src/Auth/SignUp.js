@@ -1,16 +1,12 @@
-import React, { useState } from 'react';
-import { withRouter } from 'react-router-dom';
+import React, { useState, useContext } from 'react';
 
-import FacebookLogin from 'react-facebook-login';
+import MyContext from '../hooks/myContext';
 
-import { GoogleLogin } from 'react-google-login';
+import ButtonFacebook from '../components/Buttons/ButtonFacebook.js';
+import ButtonGoogle from '../components/Buttons/ButtonGoogle';
 
-import config from '../../config/config.json';
-
-import {
-  SignUpLocalService,
-  SignUpSocialService
-} from '../../services/auth.service';
+import { authLocalService, authSocialService } from '../services/auth.service';
+import { setSession } from '../services/session.service';
 
 import {
   MDBContainer,
@@ -20,62 +16,66 @@ import {
   MDBCardBody,
   MDBInput,
   MDBBtn,
-  MDBIcon,
   MDBModalFooter
 } from 'mdbreact';
 
 const SignUp = props => {
+  const { setAuth } = useContext(MyContext);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
 
   const [message, setMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setLoading] = useState(false);
 
   const submitRegister = async e => {
     e.preventDefault();
+
     setMessage('');
+    setErrorMessage('');
     setLoading(true);
 
+    e.target.className += ' was-validated';
+
     if (password !== passwordConfirm) {
-      setMessage('passwords dont match');
+      setErrorMessage('Fields are not valid');
       setLoading(false);
       return;
     }
 
-    const response = await SignUpLocalService({
+    const result = await authLocalService({
       name,
       email,
       password,
       passwordConfirm
     });
 
-    console.log(response);
-    //  setMessage(message);
+    setMessage(result.message);
     setLoading(false);
   };
 
   const responseFacebook = async response => {
-    console.log(response.accessToken);
-    const { user, token } = await SignUpSocialService(
-      'facebook',
-      response.accessToken
-    );
-    console.log(user, token);
+    const result = await authSocialService('facebook', response.accessToken);
+
+    if (result.authorized) {
+      setAuth(true);
+      props.history.push(result.path);
+    } else {
+      setMessage('Something went wrong');
+    }
   };
+
   const responseGoogle = async response => {
-    const { user, token } = await SignUpSocialService(
-      'google',
-      response.accessToken
-    );
+    const result = await authSocialService('google', response.accessToken);
 
-    if (token) {
-      localStorage.setItem('user', user);
-      localStorage.setItem('token', token);
-      localStorage.setItem('auth', true);
-
-      if (user && !user.isCompleted) props.history.push('/complete-signup');
+    if (result.authorized) {
+      setAuth(true);
+      props.history.push(result.path);
+    } else {
+      setMessage('Something went wrong');
     }
   };
 
@@ -92,6 +92,8 @@ const SignUp = props => {
                 <h3 className="dark-grey-text mb-5">
                   <strong>Sign up</strong>
                 </h3>
+                <h5 className="red-text mb-5">{errorMessage}</h5>
+                <h5 className="green-text mb-5">{message}</h5>
               </div>
               <form
                 className="needs-validation"
@@ -100,43 +102,40 @@ const SignUp = props => {
               >
                 <MDBInput
                   label="name*"
-                  group
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  error="wrong"
-                  success="right"
+                  className="form-control"
                   required
                 />
                 <MDBInput
-                  label="Your email"
+                  label="Your email*"
                   name="email"
-                  group
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  error="wrong"
-                  success="right"
+                  className="form-control"
                   required
                 />
                 <MDBInput
-                  label="Your password"
+                  label="Your password*"
                   name="password"
-                  group
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   containerClass="mb-0"
+                  className="form-control"
                   required
                 />
                 <MDBInput
                   label="Confirm your password"
-                  name="passwordConfirmrm"
+                  name="passwordConfirm"
                   group
                   type="password"
                   value={passwordConfirm}
                   onChange={e => setPasswordConfirm(e.target.value)}
                   containerClass="mb-0"
+                  className="form-control"
                   required
                 />
                 <div className="text-center mb-3 mt-5">
@@ -146,26 +145,16 @@ const SignUp = props => {
                     rounded
                     className="btn-block z-depth-1a"
                   >
-                    {isLoading ? 'Loading...' : 'Signup'}
+                    {isLoading ? 'Loading...' : 'Sign up'}
                   </MDBBtn>
                 </div>
               </form>
               <p className="font-small dark-grey-text text-right d-flex justify-content-center mb-3 pt-2">
-                or Sign up with:
+                or Sign in with:
               </p>
               <div className="row my-3 d-flex justify-content-center">
-                <FacebookLogin
-                  appId={config.FACEBOOK_APP_ID}
-                  autoLoad={false}
-                  fields="name,email,picture"
-                  callback={responseFacebook}
-                />
-                <GoogleLogin
-                  clientId={config.GOOGLE_CLIENT_ID}
-                  buttonText="Login"
-                  onSuccess={responseGoogle}
-                  onFailure={responseGoogle}
-                />
+                <ButtonFacebook responseFacebook={responseFacebook} />
+                <ButtonGoogle responseGoogle={responseGoogle} />
               </div>
             </MDBCardBody>
             <MDBModalFooter className="mx-5 pt-3 mb-1">
@@ -183,4 +172,4 @@ const SignUp = props => {
   );
 };
 
-export default withRouter(SignUp);
+export default SignUp;

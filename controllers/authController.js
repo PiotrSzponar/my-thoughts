@@ -58,6 +58,7 @@ exports.socialSignin = catchAsync(async (req, res, next) => {
   if (!req.user) {
     return res.send(401, 'User Not Authenticated');
   }
+
   req.auth = {
     id: req.user.id
   };
@@ -198,7 +199,14 @@ exports.signin = catchAsync(async (req, res, next) => {
     return next(new AppError('User used social login', 400));
   }
 
-  createTokenCookie(user, 200, res);
+  req.auth = {
+    id: user.id
+  };
+
+  // Gain access
+  req.user = user;
+
+  next();
 });
 
 // User sign out - clear JWT cookie
@@ -211,8 +219,9 @@ exports.signout = (req, res) => {
 exports.protect = catchAsync(async (req, res, next) => {
   // Getting token and check of it's there
   let token;
-  if (req.cookies.jwt) {
-    token = req.cookies.jwt;
+
+  if (req.headers['x-access-token']) {
+    token = req.headers['x-access-token'];
   }
 
   if (!token) {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 import { MDBCardTitle } from 'mdbreact';
-import Jumbotron from '../Jumbotron';
-import { verifyService } from '../../services/auth.service';
+import Jumbotron from '../components/Jumbotron';
+import { verifyService } from '../services/auth.service';
 
 const Verification = props => {
   const [message, setMessage] = useState('Wait for it!');

@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 
 import { MDBCardBody, MDBCardTitle } from 'mdbreact';
 
-import Jumbotron from '../Jumbotron';
-import EmailForm from '../EmailForm';
-import { sendEmailToForgotPasswordService } from '../../services/auth.service';
+import Jumbotron from '../components/Jumbotron';
+import EmailForm from '../components/EmailForm';
+import { sendEmailToForgotPasswordService } from '../services/auth.service';
 
 const ResendVerification = () => {
   const [message, setMessage] = useState('');

@@ -208,6 +208,7 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
       )
     );
   }
+
   // Validation errors
   if (!validationResult(req).isEmpty()) {
     return next(

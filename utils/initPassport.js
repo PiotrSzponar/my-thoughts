@@ -1,11 +1,11 @@
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth2');
+// const GoogleStrategy = require('passport-google-oauth2');
 
 //new strategy
 const GoogleTokenStrategy = require('passport-google-token').Strategy;
 const FacebookTokenStrategy = require('passport-facebook-token');
 
-const FacebookStrategy = require('passport-facebook');
+// const FacebookStrategy = require('passport-facebook');
 const User = require('../models/userModel');
 const catchAsync = require('./catchAsync');
 
@@ -20,8 +20,19 @@ passport.use(
         catchAsync(async () => {
           let user = await User.findOne({ 'googleProvider.id': profile.id });
 
+          //user found
           if (user) {
             return done(null, user);
+          }
+
+          const usr = await User.findOne({
+            email: profile.emails[0].value
+          });
+
+          if (usr && usr.method !== 'google') {
+            return done(null, false, {
+              message: 'User registered using other method'
+            });
           }
 
           if (!user) {
@@ -48,24 +59,29 @@ passport.use(
 passport.use(
   new FacebookTokenStrategy(
     {
-      //options for the facebook start
       clientID: process.env.FACEBOOK_CLIENT_ID,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET
-      // profileFields: ['id', 'displayName', 'picture', 'email']
     },
-    (req, accessToken, refreshToken, profile, done) => {
+    (accessToken, refreshToken, profile, done) => {
       process.nextTick(
         catchAsync(async () => {
           //check if user exists in db
           let user = await User.findOne({ 'facebookProvider.id': profile.id });
-          const user2 = await User.findOne({ 'googleProvider.id': profile.id });
-
-          console.log(user2, profile);
 
           //already have the user
           if (user) {
             //send to serialize
             return done(null, user);
+          }
+
+          const usr = await User.findOne({
+            email: profile.emails[0].value
+          });
+
+          if (usr && usr.method !== 'facebook') {
+            return done(null, false, {
+              message: 'User registered using other method'
+            });
           }
 
           // new user

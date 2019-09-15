@@ -1,29 +1,37 @@
-// const apiUrl = 'http://localhost:3000/';
+import config from '../config/config.json';
+import { getSession } from './session.service';
 
-// const header = {
-//   'Content-Type': 'application/json',
-//   'Access-Control-Allow-Origin': '*'
-// };
+const header = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*'
+};
 
-// export const LogInService = async body => {
-//   try {
-//     const response = await fetch(`${apiUrl}api/users/signin`, {
-//       method: 'POST',
-//       headers: header,
-//       body: JSON.stringify(body)
-//     });
-//     const data = await response.json();
+export const completeUserService = async body => {
+  try {
+    const response = await fetch(`${config.API_URL}api/users/signup/complete`, {
+      method: 'PATCH',
+      headers: {
+        origin: config.API_URL,
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'x-access-token': await getSession('token')
+      },
+      body: JSON.stringify(body)
+    });
 
-//     if (data.status !== 'ok') {
-//       return data.error.errors;
-//     }
+    const { status, error } = await response.json();
 
-//     return data;
-//   } catch (error) {
-//     return error;
-//   }
-// };
+    const result = {
+      path: '/',
+      message: ''
+    };
 
-// export default {
-//   logInService
-// };
+    if (status === 'fail') {
+      result.message = error.message;
+    }
+
+    return result;
+  } catch (error) {
+    return error;
+  }
+};

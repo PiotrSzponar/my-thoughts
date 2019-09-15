@@ -9,11 +9,13 @@ import {
   MDBBtn
 } from 'mdbreact';
 
-import { SignUpLocalService } from '../../services/auth.service';
+import { completeUserService } from '../services/user.service';
+import DatePicker from 'react-datepicker';
 
 const CompleteSignup = props => {
-  const [birthDate, setBirthDate] = useState('');
+  const [birthDate, setBirthDate] = useState(new Date());
   const [gender, setGender] = useState('female');
+
   const [bio, setBio] = useState('');
   const [city, setCity] = useState('');
   const [country, setCountry] = useState('');
@@ -27,12 +29,8 @@ const CompleteSignup = props => {
     setMessage('');
     setLoading(true);
 
-    const response = await SignUpLocalService({
-      email: localStorage.getItem('email'),
-      password: localStorage.getItem('password'),
-      passwordConfirm: localStorage.getItem('passwordConfirm'),
-      method: 'local',
-      birthDate,
+    const result = await completeUserService({
+      birthDate: birthDate.toISOString().substring(0, 10),
       bio,
       city,
       country,
@@ -40,15 +38,12 @@ const CompleteSignup = props => {
       gender
     });
 
-    // setMessage(message);
     setLoading(false);
 
-    if (response.status === 'ok') {
-      setTimeout(() => {
-        props.history.push('/complete-signup');
-      }, 3000);
+    if (!result.message) {
+      props.history.push(result.path);
     } else {
-      console.log(response);
+      setMessage(result.message);
     }
   };
 
@@ -72,32 +67,23 @@ const CompleteSignup = props => {
                 onSubmit={submitCompleteSignup}
                 noValidate
               >
-                <MDBInput
-                  label="Birth Date*"
-                  group
-                  type="date"
-                  value={birthDate}
-                  onChange={e => setBirthDate(e.target.value)}
-                  error="wrong"
-                  success="right"
+                <label className="grey-text">Birth date</label>
+                <DatePicker
+                  dateFormat="yyyy-MM-dd"
+                  selected={birthDate}
+                  onChange={date => setBirthDate(date)}
                   required
                 />
-                <MDBInput
-                  label="female"
-                  group
-                  type="radio"
-                  value="female"
-                  checked={gender === 'female'}
-                  onClick={e => setGender(e.target.value)}
-                />
-                <MDBInput
-                  label="male"
-                  group
-                  type="radio"
-                  value="male"
-                  checked={gender === 'male'}
-                  onClick={e => setGender(e.target.value)}
-                />
+                <label className="grey-text">gender</label>
+
+                <select
+                  value={gender}
+                  onChange={e => setGender(e.target.value)}
+                  className="browser-default custom-select"
+                >
+                  <option value="female">female</option>
+                  <option value="male">male</option>
+                </select>
                 <MDBInput
                   label="Your bio"
                   group
@@ -106,7 +92,6 @@ const CompleteSignup = props => {
                   onChange={e => setBio(e.target.value)}
                   containerClass="mb-0"
                 />
-
                 <MDBInput
                   label="Your city"
                   group
@@ -115,7 +100,6 @@ const CompleteSignup = props => {
                   onChange={e => setCity(e.target.value)}
                   containerClass="mb-0"
                 />
-
                 <MDBInput
                   label="Your country"
                   group

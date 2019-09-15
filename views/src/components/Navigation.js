@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+
+import { clearSession } from '../services/session.service';
+
+import MyContext from '../hooks/myContext';
 
 import {
   MDBNavbar,
@@ -8,18 +12,21 @@ import {
   MDBNavLink,
   MDBNavbarToggler,
   MDBCollapse
-  // MDBFormInline
-  // MDBDropdown,
-  // MDBDropdownToggle,
-  // MDBDropdownMenu,
-  // MDBDropdownItem
 } from 'mdbreact';
 
-const Navigation = () => {
+const Navigation = props => {
+  const { isLoggedIn, setAuth } = useContext(MyContext);
+
   const [isOpen, toggleIsOpen] = useState(false);
 
   const toggleCollapse = () => {
     toggleIsOpen(!isOpen);
+  };
+
+  const onLogout = async () => {
+    await clearSession('auth', 'user', 'token');
+    toggleIsOpen(!isOpen);
+    setAuth(false);
   };
 
   return (
@@ -35,48 +42,39 @@ const Navigation = () => {
       <MDBNavbarToggler onClick={toggleCollapse} />
       <MDBCollapse id="navbarCollapse3" isOpen={isOpen} navbar>
         <MDBNavbarNav right>
-          {/* <MDBNavItem>
-            <MDBNavbarNav right>
-              <MDBNavItem>
-                <MDBFormInline>
-                  <div className="md-form my-0">
-                    <input
-                      className="form-control mr-sm-2"
-                      type="text"
-                      placeholder="Search"
-                      aria-label="Search"
-                    />
-                  </div>
-                </MDBFormInline>
-              </MDBNavItem>
-            </MDBNavbarNav>
-          </MDBNavItem> */}
           <MDBNavItem active>
-            <MDBNavLink to="/">Home</MDBNavLink>
+            <MDBNavLink to="/" onClick={toggleCollapse}>
+              Home
+            </MDBNavLink>
           </MDBNavItem>
-          <MDBNavItem>
-            <MDBNavLink to="/signup">Sign Up</MDBNavLink>
-          </MDBNavItem>
-          <MDBNavItem>
-            <MDBNavLink to="/Signin">Sign In</MDBNavLink>
-          </MDBNavItem>
-          {/* <MDBNavItem>
-              <MDBDropdown>
-                <MDBDropdownToggle nav caret>
-                  <span className="mr-2">Dropdown</span>
-                </MDBDropdownToggle>
-                <MDBDropdownMenu>
-                  <MDBDropdownItem href="#!">Action</MDBDropdownItem>
-                  <MDBDropdownItem href="#!">Another Action</MDBDropdownItem>
-                  <MDBDropdownItem href="#!">
-                    Something else here
-                  </MDBDropdownItem>
-                  <MDBDropdownItem href="#!">
-                    Something else here
-                  </MDBDropdownItem>
-                </MDBDropdownMenu>
-              </MDBDropdown>
-            </MDBNavItem> */}
+
+          {isLoggedIn ? (
+            <>
+              <MDBNavItem>
+                <MDBNavLink to="/user/1231" onClick={toggleCollapse}>
+                  my profile
+                </MDBNavLink>
+              </MDBNavItem>
+              <MDBNavItem>
+                <MDBNavLink to="/" onClick={onLogout}>
+                  Logout
+                </MDBNavLink>
+              </MDBNavItem>
+            </>
+          ) : (
+            <>
+              <MDBNavItem>
+                <MDBNavLink to="/signup" onClick={toggleCollapse}>
+                  Sign up
+                </MDBNavLink>
+              </MDBNavItem>
+              <MDBNavItem>
+                <MDBNavLink to="/Signin" onClick={toggleCollapse}>
+                  Sign in
+                </MDBNavLink>
+              </MDBNavItem>
+            </>
+          )}
         </MDBNavbarNav>
       </MDBCollapse>
     </MDBNavbar>
