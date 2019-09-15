@@ -18,7 +18,9 @@ passport.use(
     (accessToken, refreshToken, profile, done) => {
       process.nextTick(
         catchAsync(async () => {
-          let user = await User.findOne({ 'googleProvider.id': profile.id });
+          let user = await User.findOne({
+            'googleProvider.id': profile.id
+          }).select(' +isCompleted');
 
           //user found
           if (user) {
@@ -66,7 +68,9 @@ passport.use(
       process.nextTick(
         catchAsync(async () => {
           //check if user exists in db
-          let user = await User.findOne({ 'facebookProvider.id': profile.id });
+          let user = await User.findOne({
+            'facebookProvider.id': profile.id
+          }).select(' +isCompleted');
 
           //already have the user
           if (user) {
