@@ -8,13 +8,13 @@ import MyContext from './hooks/myContext';
 import './App.css';
 import PrivateRoute from './components/Router/PrivateRoute';
 import Navigation from './components/Navigation';
-import SignIn from './Auth/SignIn';
-import SignUp from './Auth/SignUp';
-import CompleteSignup from './Auth/CompleteSignup';
-import Verification from './Auth/Verification';
-import ResendVerification from './Auth/ResendVerification';
-import ForgotPassword from './Auth/ForgotPassword';
-import ResetPassword from './Auth/ResetPassword';
+import SignIn from './auth/SignIn';
+import SignUp from './auth/SignUp';
+import CompleteSignup from './auth/CompleteSignup';
+import Verification from './auth/Verification';
+import ResendVerification from './auth/ResendVerification';
+import ForgotPassword from './auth/ForgotPassword';
+import ResetPassword from './auth/ResetPassword';
 
 import { getSession } from './services/session.service';
 
