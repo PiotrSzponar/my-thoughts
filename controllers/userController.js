@@ -88,21 +88,21 @@ exports.getUser = catchAsync(async (req, res, next) => {
   const user =
     req.route.path === '/me'
       ? await User.findById(req.user.id).populate({
+        path: 'friends',
+        options: { sort: { updatedAt: 'desc' } }
+      })
+      : await User.findById(req.params.id)
+        .populate({
           path: 'friends',
           options: { sort: { updatedAt: 'desc' } }
         })
-      : await User.findById(req.params.id)
-          .populate({
-            path: 'friends',
-            options: { sort: { updatedAt: 'desc' } }
-          })
-          .select(
-            `${
-              req.user.role === 'admin'
-                ? '+isHidden +isVerified +isActive +isCompleted'
-                : '-isHidden -isVerified -isActive -isCompleted'
-            }`
-          );
+        .select(
+          `${
+          req.user.role === 'admin'
+            ? '+isHidden +isVerified +isActive +isCompleted'
+            : '-isHidden -isVerified -isActive -isCompleted'
+          }`
+        );
 
   if (!user) {
     return next(new AppError('No user found', 404));
@@ -152,13 +152,13 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   const updatedUser =
     req.user.role === 'admin' && req.route.path !== '/me'
       ? await User.findByIdAndUpdate(req.params.id, req.body, {
-          new: true,
-          runValidators: true
-        }).select('+isHidden +isVerified +isActive')
+        new: true,
+        runValidators: true
+      }).select('+isHidden +isVerified +isActive')
       : await User.findByIdAndUpdate(req.user.id, filteredBody, {
-          new: true,
-          runValidators: true
-        });
+        new: true,
+        runValidators: true
+      });
 
   if (!updatedUser) {
     return next(new AppError('No user found', 404));
@@ -236,7 +236,6 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
 
   // Mark user profile as completed
   filteredBody.isCompleted = true;
-
   // Provide the changes
   const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,

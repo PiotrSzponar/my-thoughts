@@ -105,7 +105,6 @@ exports.createPost = catchAsync(async (req, res, next) => {
   // Add post photos
   if (req.files.length > 0) {
     const newPhotos = [];
-
     await Promise.all(
       req.body.photos.map(async (photo, i) => {
         const fileName = `post-${newPost.id}-${Date.now()}-${i + 1}.jpeg`;
@@ -264,13 +263,13 @@ exports.updatePost = catchAsync(async (req, res, next) => {
   const updatedPost =
     req.user.role === 'admin'
       ? await Post.findByIdAndUpdate(req.params.id, req.body, {
-          new: true,
-          runValidators: true
-        })
+        new: true,
+        runValidators: true
+      })
       : await Post.findByIdAndUpdate(req.params.id, filteredBody, {
-          new: true,
-          runValidators: true
-        });
+        new: true,
+        runValidators: true
+      });
 
   // Delete old files and add new ones
   if (req.files.length > 0) {
