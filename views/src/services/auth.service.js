@@ -84,7 +84,7 @@ export const authSocialService = async (type, token) => {
 
     if (status === 'fail') {
       result.message = error.message;
-      return;
+      return result;
     }
 
     if (token) {

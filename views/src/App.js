@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import MyContext from './hooks/myContext';
 
 import './App.css';
-import PrivateRoute from './components/Router/PrivateRoute';
+import PrivateRoute from './Router/PrivateRoute';
 import Navigation from './components/Navigation';
 import SignIn from './auth/SignIn';
 import SignUp from './auth/SignUp';

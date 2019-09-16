@@ -15,9 +15,8 @@ import {
 } from 'mdbreact';
 
 const Navigation = ({ user }) => {
-  const { isLoggedIn, setAuth, userData, setUserData } = useContext(MyContext);
+  const { isLoggedIn, setAuth, setUserData } = useContext(MyContext);
 
-  console.log(userData);
   const [isOpen, toggleIsOpen] = useState(false);
 
   const toggleCollapse = () => {
@@ -46,7 +45,7 @@ const Navigation = ({ user }) => {
         <MDBNavbarNav right>
           <MDBNavItem>
             <MDBNavLink to="/" onClick={toggleCollapse}>
-              Dashboard
+              Home
             </MDBNavLink>
           </MDBNavItem>
 
@@ -55,7 +54,7 @@ const Navigation = ({ user }) => {
               <MDBNavItem>
                 {user && !user.isCompleted && (
                   <MDBNavLink to="/complete-signup" onClick={toggleCollapse}>
-                    complete
+                    complete user
                   </MDBNavLink>
                 )}
               </MDBNavItem>
@@ -79,7 +78,7 @@ const Navigation = ({ user }) => {
               </MDBNavItem>
               <MDBNavItem>
                 <MDBNavLink to="/forgot-password" onClick={toggleCollapse}>
-                  forgot-password
+                  forgot password
                 </MDBNavLink>
               </MDBNavItem>
               <MDBNavItem>

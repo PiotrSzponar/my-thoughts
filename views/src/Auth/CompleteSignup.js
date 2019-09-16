@@ -43,7 +43,6 @@ const CompleteSignup = props => {
     });
 
     setLoading(false);
-    console.log(result);
     if (!result.message) {
       setUserData(result.user);
       props.history.push(result.path);
