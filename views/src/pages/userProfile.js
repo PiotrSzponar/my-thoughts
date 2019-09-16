@@ -1,14 +1,8 @@
-import React, { useContext } from 'react';
+import React from 'react';
 
 import { MDBContainer, MDBRow, MDBCol } from 'mdbreact';
 
-// import { fetchUserService } from '../services/user.service';
-
-import MyContext from '../hooks/myContext';
-
 const UserProfile = ({ user }) => {
-  const { userData } = useContext(MyContext);
-
   return (
     <MDBContainer>
       <MDBRow>
