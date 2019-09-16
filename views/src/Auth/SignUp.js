@@ -6,7 +6,6 @@ import ButtonFacebook from '../components/Buttons/ButtonFacebook.js';
 import ButtonGoogle from '../components/Buttons/ButtonGoogle';
 
 import { authLocalService, authSocialService } from '../services/auth.service';
-import { setSession } from '../services/session.service';
 
 import {
   MDBContainer,
@@ -20,7 +19,7 @@ import {
 } from 'mdbreact';
 
 const SignUp = props => {
-  const { setAuth } = useContext(MyContext);
+  const { setAuth, setUserData } = useContext(MyContext);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -62,6 +61,7 @@ const SignUp = props => {
 
     if (result.authorized) {
       setAuth(true);
+      setUserData(result.user);
       props.history.push(result.path);
     } else {
       setMessage('Something went wrong');
@@ -73,6 +73,7 @@ const SignUp = props => {
 
     if (result.authorized) {
       setAuth(true);
+      setUserData(result.user);
       props.history.push(result.path);
     } else {
       setMessage('Something went wrong');

@@ -10,10 +10,9 @@ const EmailForm = ({ handleSubmit, setEmail, isLoading }) => {
         group
         type="email"
         labelClass="white-text"
+        className="white-text"
         onChange={e => setEmail(e.target.value)}
         validate
-        error="wrong"
-        success="right"
       />
       <MDBBtn type="submit" color="white" rounded className="z-depth-1a">
         {isLoading ? 'Loading...' : 'Submit'}

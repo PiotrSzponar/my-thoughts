@@ -3,8 +3,6 @@ import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 
 import MyContext from './hooks/myContext';
 
-// import { MDBContainer, MDBRow, MDBCol } from 'mdbreact';
-
 import './App.css';
 import PrivateRoute from './components/Router/PrivateRoute';
 import Navigation from './components/Navigation';
@@ -20,7 +18,7 @@ import { getSession } from './services/session.service';
 
 import Dashboard from './pages/dashboard';
 import Posts from './pages/posts';
-import userProfile from './pages/userProfile';
+import UserProfile from './pages/userProfile';
 
 function App() {
   const [isLoggedIn, setAuth] = useState(false);
@@ -29,27 +27,29 @@ function App() {
   useEffect(() => {
     (async () => {
       const authorized = await getSession('auth', 'user');
-      setAuth(true);
-      setUserData(authorized[1]);
+      if (authorized[0]) {
+        setAuth(true);
+        setUserData(authorized[1]);
+      }
     })();
   }, []);
 
   return (
-    <MyContext.Provider value={{ isLoggedIn, setAuth }}>
+    <MyContext.Provider value={{ isLoggedIn, setAuth, userData, setUserData }}>
       <Router>
-        <Navigation />
+        <Navigation user={userData} />
         <Switch>
-          <PrivateRoute path="/" exact component={Dashboard} />
           <Route path="/signin" component={SignIn} />
           <Route path="/signup" component={SignUp} />
-          <PrivateRoute path="/complete-signup" component={CompleteSignup} />
-          <Route path="/resend-verification" component={ResendVerification} />
           <Route path="/verification/:id" component={Verification} />
-          <PrivateRoute path="/posts" component={Posts} />
-          <PrivateRoute path="/user/:id" component={userProfile} />
-          <PrivateRoute path="/me" component={userProfile} />
+          <Route path="/resend-verification" component={ResendVerification} />
           <Route path="/forgot-password" component={ForgotPassword} />
           <Route path="/reset-password/:id" component={ResetPassword} />
+          <PrivateRoute exact path="/" component={Dashboard} />
+          <PrivateRoute path="/complete-signup" component={CompleteSignup} />
+          <PrivateRoute path="/posts" component={Posts} />
+          {/* <PrivateRoute path="/user/:id" component={userProfile} /> */}
+          <PrivateRoute path="/me" component={UserProfile} />
         </Switch>
       </Router>
     </MyContext.Provider>

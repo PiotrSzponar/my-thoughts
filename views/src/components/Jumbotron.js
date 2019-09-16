@@ -5,7 +5,6 @@ import {
   MDBContainer,
   MDBRow,
   MDBCol,
-  MDBCardTitle,
   MDBIcon
 } from 'mdbreact';
 
@@ -14,7 +13,7 @@ const Jumbotron = ({ children }) => {
     <MDBContainer>
       <MDBRow>
         <MDBCol>
-          <MDBJumbotron className="primary-color" style={{ padding: 0 }}>
+          <MDBJumbotron className="elegant-color" style={{ padding: 0 }}>
             <MDBCol className="text-center py-5 px-4 my-5">
               <MDBCol className="white-text py-5">
                 {children}

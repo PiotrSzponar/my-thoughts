@@ -4,9 +4,9 @@ export const setSession = async obj => {
   });
 };
 
-export const getSession = async (...items) => {
+export const getSession = (...items) => {
   const data = [];
-  await items.forEach(key => {
+  items.forEach(key => {
     if (localStorage.getItem(key) !== null)
       data.push(JSON.parse(localStorage.getItem(key)));
   });

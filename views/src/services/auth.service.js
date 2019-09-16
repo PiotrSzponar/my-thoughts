@@ -37,19 +37,22 @@ export const signinService = async body => {
     const result = {
       path: '/',
       authorized: false,
+      user: {},
       message: ''
     };
 
     if (status === 'fail') {
       result.message = error.message;
+      return result;
     }
 
     if (data.user && !data.user.isCompleted) {
       result.path = '/complete-signup';
     }
 
-    await setSession({ auth: true, token: newtoken });
+    await setSession({ auth: true, user: data.user, token: newtoken });
     result.authorized = true;
+    result.user = data.user;
     return result;
   } catch (error) {
     return error;
@@ -75,7 +78,8 @@ export const authSocialService = async (type, token) => {
 
     let result = {
       path: '/',
-      authorized: false
+      authorized: false,
+      user: {}
     };
 
     if (status === 'fail') {
@@ -86,6 +90,7 @@ export const authSocialService = async (type, token) => {
     if (token) {
       await setSession({ auth: true, user: data.user, token: newtoken });
       result.authorized = true;
+      result.user = data.user;
 
       if (data.user && !data.user.isCompleted) {
         result.path = '/complete-signup';

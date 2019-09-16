@@ -19,7 +19,7 @@ import ButtonFacebook from '../components/Buttons/ButtonFacebook.js';
 import ButtonGoogle from '../components/Buttons/ButtonGoogle';
 
 const SignIn = props => {
-  const { setAuth } = useContext(MyContext);
+  const { setAuth, setUserData } = useContext(MyContext);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,6 +44,7 @@ const SignIn = props => {
       setErrorMessage(result.message);
     } else {
       setAuth(true);
+      setUserData(result.user);
       props.history.push(result.path);
     }
   };
@@ -53,6 +54,7 @@ const SignIn = props => {
 
     if (result.authorized) {
       setAuth(true);
+      setUserData(result.user);
       props.history.push(result.path);
     } else {
       setErrorMessage('Something went wrong');
@@ -64,6 +66,7 @@ const SignIn = props => {
 
     if (result.authorized) {
       setAuth(true);
+      setUserData(result.user);
       props.history.push(result.path);
     } else {
       setErrorMessage('Something went wrong');

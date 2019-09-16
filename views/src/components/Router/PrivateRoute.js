@@ -3,15 +3,20 @@ import { Route, Redirect } from 'react-router-dom';
 
 import MyContext from '../../hooks/myContext';
 
+import { getSession } from '../../services/session.service';
+// import { fetchUserService } from '../services/user.service';
+
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const { isLoggedIn } = useContext(MyContext);
+  const { isLoggedIn, setUserData } = useContext(MyContext);
+
+  const authorized = getSession('auth', 'user');
 
   return (
     <Route
       {...rest}
       render={props =>
-        isLoggedIn ? (
-          <Component {...props} />
+        authorized[0] ? (
+          <Component {...props} user={authorized[1]} />
         ) : (
           <Redirect
             to={{

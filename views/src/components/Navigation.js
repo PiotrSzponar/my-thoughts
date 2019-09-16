@@ -14,9 +14,10 @@ import {
   MDBCollapse
 } from 'mdbreact';
 
-const Navigation = props => {
-  const { isLoggedIn, setAuth } = useContext(MyContext);
+const Navigation = ({ user }) => {
+  const { isLoggedIn, setAuth, userData, setUserData } = useContext(MyContext);
 
+  console.log(userData);
   const [isOpen, toggleIsOpen] = useState(false);
 
   const toggleCollapse = () => {
@@ -27,6 +28,7 @@ const Navigation = props => {
     await clearSession('auth', 'user', 'token');
     toggleIsOpen(!isOpen);
     setAuth(false);
+    setUserData({});
   };
 
   return (
@@ -42,17 +44,24 @@ const Navigation = props => {
       <MDBNavbarToggler onClick={toggleCollapse} />
       <MDBCollapse id="navbarCollapse3" isOpen={isOpen} navbar>
         <MDBNavbarNav right>
-          <MDBNavItem active>
+          <MDBNavItem>
             <MDBNavLink to="/" onClick={toggleCollapse}>
-              Home
+              Dashboard
             </MDBNavLink>
           </MDBNavItem>
 
           {isLoggedIn ? (
             <>
               <MDBNavItem>
-                <MDBNavLink to="/user/1231" onClick={toggleCollapse}>
-                  my profile
+                {user && !user.isCompleted && (
+                  <MDBNavLink to="/complete-signup" onClick={toggleCollapse}>
+                    complete
+                  </MDBNavLink>
+                )}
+              </MDBNavItem>
+              <MDBNavItem>
+                <MDBNavLink to="/me" onClick={toggleCollapse}>
+                  {user && user.name}
                 </MDBNavLink>
               </MDBNavItem>
               <MDBNavItem>
@@ -64,13 +73,23 @@ const Navigation = props => {
           ) : (
             <>
               <MDBNavItem>
-                <MDBNavLink to="/signup" onClick={toggleCollapse}>
-                  Sign up
+                <MDBNavLink to="/resend-verification" onClick={toggleCollapse}>
+                  resend verification
+                </MDBNavLink>
+              </MDBNavItem>
+              <MDBNavItem>
+                <MDBNavLink to="/forgot-password" onClick={toggleCollapse}>
+                  forgot-password
                 </MDBNavLink>
               </MDBNavItem>
               <MDBNavItem>
                 <MDBNavLink to="/Signin" onClick={toggleCollapse}>
                   Sign in
+                </MDBNavLink>
+              </MDBNavItem>
+              <MDBNavItem>
+                <MDBNavLink to="/signup" onClick={toggleCollapse}>
+                  Sign up
                 </MDBNavLink>
               </MDBNavItem>
             </>

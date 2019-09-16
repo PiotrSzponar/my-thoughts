@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import {
   MDBContainer,
   MDBRow,
@@ -8,11 +8,15 @@ import {
   MDBInput,
   MDBBtn
 } from 'mdbreact';
-
-import { completeUserService } from '../services/user.service';
 import DatePicker from 'react-datepicker';
 
+import { completeUserService } from '../services/user.service';
+
+import MyContext from '../hooks/myContext';
+
 const CompleteSignup = props => {
+  const { setUserData } = useContext(MyContext);
+
   const [birthDate, setBirthDate] = useState(new Date());
   const [gender, setGender] = useState('female');
 
@@ -39,8 +43,9 @@ const CompleteSignup = props => {
     });
 
     setLoading(false);
-
+    console.log(result);
     if (!result.message) {
+      setUserData(result.user);
       props.history.push(result.path);
     } else {
       setMessage(result.message);
@@ -68,18 +73,20 @@ const CompleteSignup = props => {
                 noValidate
               >
                 <label className="grey-text">Birth date</label>
+                <br />
                 <DatePicker
                   dateFormat="yyyy-MM-dd"
                   selected={birthDate}
                   onChange={date => setBirthDate(date)}
                   required
                 />
+                <br />
                 <label className="grey-text">gender</label>
-
+                <br />
                 <select
                   value={gender}
                   onChange={e => setGender(e.target.value)}
-                  className="browser-default custom-select"
+                  className="custom-select"
                 >
                   <option value="female">female</option>
                   <option value="male">male</option>
