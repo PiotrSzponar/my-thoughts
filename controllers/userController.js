@@ -220,18 +220,16 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
     );
   }
   // Filtered out unwanted fields names that are not allowed to be updated, remove empties
-  const filteredBody =
-    req.route.path === '/me' &&
-    filterObj(
-      req.body,
-      'gender',
-      'birthDate',
-      'bio',
-      'country',
-      'city',
-      'isHidden',
-      'deletePhoto'
-    );
+  const filteredBody = filterObj(
+    req.body,
+    'gender',
+    'birthDate',
+    'bio',
+    'country',
+    'city',
+    'isHidden',
+    'deletePhoto'
+  );
   if (req.body.name) filteredBody.name = req.body.name;
 
   // Mark user profile as completed
