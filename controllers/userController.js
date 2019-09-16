@@ -1,7 +1,8 @@
 const { validationResult } = require('express-validator');
-const fs = require('fs');
+const fs = require('fs-extra');
 
 const User = require('../models/userModel');
+const Post = require('../models/postModel');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('./../utils/appError');
 const APIFeatures = require('./../utils/apiFeatures');
@@ -88,12 +89,12 @@ exports.getUser = catchAsync(async (req, res, next) => {
     req.route.path === '/me'
       ? await User.findById(req.user.id).populate({
           path: 'friends',
-          options: { sort: { createdAt: 'desc' } }
+          options: { sort: { updatedAt: 'desc' } }
         })
       : await User.findById(req.params.id)
           .populate({
             path: 'friends',
-            options: { sort: { createdAt: 'desc' } }
+            options: { sort: { updatedAt: 'desc' } }
           })
           .select(
             `${
@@ -142,16 +143,10 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   // Filtered out unwanted fields names that are not allowed to be updated, remove empties
   const filteredBody =
     req.route.path === '/me' &&
-    filterObj(
-      req.body,
-      'gender',
-      'birthDate',
-      'bio',
-      'country',
-      'city',
-      'isHidden',
-      'deletePhoto'
-    );
+    filterObj(req.body, 'bio', 'country', 'city', 'isHidden', 'deletePhoto');
+  if (req.body.name) filteredBody.name = req.body.name;
+  if (req.body.gender) filteredBody.gender = req.body.gender;
+  if (req.body.birthDate) filteredBody.birthDate = req.body.birthDate;
 
   // Update user document and returned the new one
   const updatedUser =
@@ -176,8 +171,12 @@ exports.updateUser = catchAsync(async (req, res, next) => {
   }
 
   // Delete photo
-  if (req.body.deletePhoto && req.body.deletePhoto === 'true') {
-    fs.unlink(`public/images/users/${updatedUser.photo}`, err => {
+  if (
+    updatedUser.photo !== 'default.jpg' &&
+    req.body.deletePhoto &&
+    req.body.deletePhoto === 'true'
+  ) {
+    fs.remove(`public/images/users/${updatedUser.photo}`, err => {
       if (err) return next(new AppError('Photo not found', 404));
     });
     updatedUser.photo = 'default.jpg';
@@ -221,17 +220,20 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
     );
   }
   // Filtered out unwanted fields names that are not allowed to be updated, remove empties
-  const filteredBody = filterObj(
-    req.body,
-    'name',
-    'gender',
-    'birthDate',
-    'bio',
-    'country',
-    'city',
-    'isHidden',
-    'deletePhoto'
-  );
+  const filteredBody =
+    req.route.path === '/me' &&
+    filterObj(
+      req.body,
+      'gender',
+      'birthDate',
+      'bio',
+      'country',
+      'city',
+      'isHidden',
+      'deletePhoto'
+    );
+  if (req.body.name) filteredBody.name = req.body.name;
+
   // Mark user profile as completed
   filteredBody.isCompleted = true;
 
@@ -249,7 +251,7 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
 
   // Delete photo
   if (req.body.deletePhoto && req.body.deletePhoto === 'true') {
-    fs.unlink(`public/images/users/${user.photo}`, err => {
+    fs.remove(`public/images/users/${user.photo}`, err => {
       if (err) return next(new AppError('Photo not found', 404));
     });
     user.photo = 'default.jpg';
@@ -294,6 +296,64 @@ exports.deleteUser = catchAsync(async (req, res, next) => {
     status: 'success',
     message: `User ${userAction}`,
     data: user
+  });
+});
+
+// Get appropriate post from logged in or provided user
+exports.getUserPosts = catchAsync(async (req, res, next) => {
+  const userId = req.route.path === '/me/posts' ? req.user.id : req.params.id;
+
+  const user = await User.findById(req.user.id).populate({
+    path: 'friends',
+    select: 'recipient'
+  });
+
+  const userFriends = user.friends.map(obj => obj.recipient);
+
+  const features = new APIFeatures(
+    Post.find({
+      author: userId,
+      $or: [
+        {
+          $and: [{ privacy: 'public' }, { state: 'publish' }]
+        },
+        {
+          $and: [{ state: 'draft' }, { author: user.id }]
+        },
+        {
+          $and: [{ privacy: 'private' }, { author: req.user.id }]
+        },
+        {
+          $and: [
+            { privacy: 'friends' },
+            { $or: [{ author: userFriends }, { author: req.user.id }] }
+          ]
+        }
+      ]
+    }).sort({ updatedAt: -1 }),
+    req.query
+  ).paginate();
+
+  const posts = await features.query;
+
+  posts.forEach(post => {
+    if (post.author.toString() === user.id) {
+      post._doc.from = 'myself';
+    } else if (
+      post.privacy === 'friends' ||
+      (post.privacy === 'public' && userFriends.includes(post.author))
+    ) {
+      post._doc.from = 'friend';
+    } else {
+      post._doc.from = 'stranger';
+    }
+  });
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      posts
+    }
   });
 });
 

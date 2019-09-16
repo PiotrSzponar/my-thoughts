@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const fs = require('fs');
+const fs = require('fs-extra');
 const request = require('request');
 const sharp = require('sharp');
 
@@ -63,6 +63,12 @@ const userSchema = new mongoose.Schema(
         ref: 'Friend'
       }
     ],
+    posts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post'
+      }
+    ],
     isVerified: {
       type: Boolean,
       default: false,
@@ -116,7 +122,7 @@ userSchema.pre('save', function(next) {
   const oldPhoto = this._photo;
 
   if (oldPhoto !== 'default.jpg') {
-    fs.unlink(`public/images/users/${oldPhoto}`, err => {
+    fs.remove(`public/images/users/${oldPhoto}`, err => {
       if (err) return next(new AppError('Photo not found', 404));
     });
   }
@@ -147,13 +153,11 @@ userSchema.pre('save', function(next) {
 });
 
 // Return only active and completed users when using 'find' methods
-// userSchema.pre('find', function(next) {
-//   this.find({
-//     isActive: { $ne: false },
-//     isCompleted: { $ne: false }
-//   });
-//   next();
-// });
+userSchema.pre(/^find/, function(next) {
+  // this points to the current query
+  this.find({ isActive: { $ne: false } });
+  next();
+});
 
 // Compare hashed passwords
 userSchema.methods.correctPassword = async function(

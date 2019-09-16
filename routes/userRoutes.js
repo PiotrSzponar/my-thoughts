@@ -98,7 +98,12 @@ router.patch(
   authController.updatePassword
 );
 
+// Show provided user
 router.get('/:id', userController.getUser);
+
+// Show my or provided user posts
+router.get('/me/posts', userController.getUserPosts);
+router.get('/:id/posts', userController.getUserPosts);
 
 // After this MW - only for Admin
 router.use(authController.restrictTo('admin'));
