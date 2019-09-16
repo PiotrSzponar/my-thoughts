@@ -3,8 +3,9 @@ const Email = require('../utils/email');
 const User = require('../models/userModel');
 const Post = require('../models/postModel');
 
+getFriends();
 
-const dailyJob = schedule.scheduleJob('*/40 * * * * *', async function () {
+const dailyJob = schedule.scheduleJob('* * 24 * * *', async function () {
     const posts = await getPosts();
     const users = await getUsers();
 
@@ -30,20 +31,25 @@ const dailyJob = schedule.scheduleJob('*/40 * * * * *', async function () {
 })
 
 
-async function getFriends() {
-    const user = await User.findById('5d7e65d78f0b7d09b8f3b268')
+async function getFriends(userid = '5d752fa8826ea343ecade1c2') {
+    const user = await User.findById(userid)
         .populate({
             path: 'friends',
-            select: 'status',
+            select: 'status recipient',
             match: { status: 3 }
         })
-        .select('recipient');
 
-    console.log(user);
+    const friends = user.friends;
+    friends.forEach(async (friend) => {
+        const friendId = friend.recipient;
+        console.log(friendId)
+        const friendPosts = await getFriendPosts(friendId);
+        console.log(friendPosts);
+    });
 }
 
 async function getFriendPosts(friendId) {
-    const posts = await Post.find({ author: friendiD, privacy: 'friends' }).select('title content').populate({
+    const posts = await Post.find({ author: friendId, privacy: 'friends' }).select('title content').populate({
         path: 'author',
         select: 'name'
     });
