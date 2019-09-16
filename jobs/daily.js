@@ -3,11 +3,8 @@ const Email = require('../utils/email');
 const User = require('../models/userModel');
 const Post = require('../models/postModel');
 
-//getFriendsPosts();
 
-getFriends();
-
-const dailyJob = schedule.scheduleJob('*/10 * * * * *', async function () {
+const dailyJob = schedule.scheduleJob('*/40 * * * * *', async function () {
     const posts = await getPosts();
     const users = await getUsers();
 
@@ -18,15 +15,16 @@ const dailyJob = schedule.scheduleJob('*/10 * * * * *', async function () {
     })
     const rawHTML = postsHTMLArray.join("");
 
-    //in for loop when i will be able to sent email more than once
-    users.forEach(async (user) => {
 
+    for (let user of users) {
+        //in for loop when i will be able to sent email more than once
         console.log("Waiting for promise to slow down sending mail");
         //Use this only in devmode and demonstraion to slowdown sending mails!
         const promise = await returnPromsie();
-        console.log("sending mail")
         await new Email(user, "urltoResign").sendDaily(rawHTML);
-    })
+        console.log("sending mail")
+
+    }
 
 
 })
