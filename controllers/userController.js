@@ -86,10 +86,12 @@ exports.search = catchAsync(async (req, res, next) => {
 exports.getUser = catchAsync(async (req, res, next) => {
   const user =
     req.route.path === '/me'
-      ? await User.findById(req.user.id).populate({
-          path: 'friends',
-          options: { sort: { createdAt: 'desc' } }
-        })
+      ? await User.findById(req.user.id)
+          .populate({
+            path: 'friends',
+            options: { sort: { createdAt: 'desc' } }
+          })
+          .select('+isCompleted')
       : await User.findById(req.params.id)
           .populate({
             path: 'friends',
@@ -200,6 +202,7 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
   }
   // There is another way to update user profile
   // Return error if completed user wants to change something in this way
+
   if (req.user.isCompleted) {
     return next(
       new AppError(
@@ -240,7 +243,7 @@ exports.completeProfile = catchAsync(async (req, res, next) => {
   const user = await User.findByIdAndUpdate(req.user.id, filteredBody, {
     new: true,
     runValidators: true
-  });
+  }).select('+isCompleted');
 
   // Add user photo
   if (req.file) {
