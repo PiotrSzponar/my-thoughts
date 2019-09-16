@@ -109,12 +109,9 @@ exports.createPost = catchAsync(async (req, res, next) => {
     await Promise.all(
       req.body.photos.map(async (photo, i) => {
         const fileName = `post-${newPost.id}-${Date.now()}-${i + 1}.jpeg`;
-        fs.move(
+        await fs.move(
           `public/images/posts/${req.user.id}/${photo}`,
-          `public/images/posts/${newPost.id}/${fileName}`,
-          err => {
-            if (err) return next(new AppError('Move files error!', 404));
-          }
+          `public/images/posts/${newPost.id}/${fileName}`
         );
         newPhotos.push(fileName);
       })
@@ -245,6 +242,9 @@ exports.updatePost = catchAsync(async (req, res, next) => {
   const post = await Post.findById(req.params.id);
 
   if (!post) {
+    fs.remove(`public/images/posts/${req.user.id}`, err => {
+      if (err) return next(new AppError('Directory not found.', 404));
+    });
     return next(new AppError('No post found to update', 404));
   }
 
