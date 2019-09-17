@@ -31,13 +31,17 @@ exports.search = catchAsync(async (req, res, next) => {
       $text: { $search: q },
       $or: [
         {
-          $and: [{ privacy: 'public' }, { state: 'publish' }]
-        },
-        {
           author: req.user.id
         },
         {
-          $and: [{ privacy: 'friends' }, { author: userFriends }]
+          $and: [{ privacy: 'public' }, { state: 'publish' }]
+        },
+        {
+          $and: [
+            { privacy: 'friends' },
+            { state: 'publish' },
+            { author: userFriends }
+          ]
         }
       ]
     },
@@ -198,16 +202,17 @@ exports.getAllPostsForUser = catchAsync(async (req, res, next) => {
     Post.find({
       $or: [
         {
-          $and: [{ privacy: 'public' }, { state: 'publish' }]
-        },
-        {
           author: user.id
         },
         {
-          $and: [{ state: 'draft' }, { author: user.id }]
+          $and: [{ privacy: 'public' }, { state: 'publish' }]
         },
         {
-          $and: [{ privacy: 'friends' }, { author: userFriends }]
+          $and: [
+            { privacy: 'friends' },
+            { state: 'publish' },
+            { author: userFriends }
+          ]
         }
       ]
     }).sort({ updatedAt: -1 }),
