@@ -1,11 +1,9 @@
 const passport = require('passport');
-// const GoogleStrategy = require('passport-google-oauth2');
 
 //new strategy
 const GoogleTokenStrategy = require('passport-google-token').Strategy;
 const FacebookTokenStrategy = require('passport-facebook-token');
 
-// const FacebookStrategy = require('passport-facebook');
 const User = require('../models/userModel');
 const catchAsync = require('./catchAsync');
 
@@ -20,18 +18,21 @@ passport.use(
         catchAsync(async () => {
           let user = await User.findOne({
             'googleProvider.id': profile.id
-          }).select(' +isCompleted');
+          }).select('+isCompleted');
 
           //user found
           if (user) {
             return done(null, user);
           }
 
-          const usr = await User.findOne({
+          const isUserWithOtherMthod = await User.findOne({
             email: profile.emails[0].value
           });
 
-          if (usr && usr.method !== 'google') {
+          if (
+            isUserWithOtherMthod &&
+            isUserWithOtherMthod.method !== 'google'
+          ) {
             return done(null, false, {
               message: 'User registered using other method'
             });
@@ -78,11 +79,14 @@ passport.use(
             return done(null, user);
           }
 
-          const usr = await User.findOne({
+          const isUserWithOtherMthod = await User.findOne({
             email: profile.emails[0].value
           });
 
-          if (usr && usr.method !== 'facebook') {
+          if (
+            isUserWithOtherMthod &&
+            isUserWithOtherMthod.method !== 'facebook'
+          ) {
             return done(null, false, {
               message: 'User registered using other method'
             });

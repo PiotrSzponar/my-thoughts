@@ -43,7 +43,9 @@ const CompleteSignup = props => {
     });
 
     setLoading(false);
+
     if (!result.message) {
+      // complete signup success
       setUserData(result.user);
       props.history.push(result.path);
     } else {

@@ -7,6 +7,8 @@ const header = {
   'Access-Control-Allow-Origin': '*'
 };
 
+//TODO: add check if token is expired
+
 export const authLocalService = async body => {
   try {
     const response = await fetch(`${config.API_URL}api/users/signup`, {

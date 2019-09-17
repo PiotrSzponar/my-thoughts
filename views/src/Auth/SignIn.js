@@ -27,19 +27,24 @@ const SignIn = props => {
   const [isLoading, setLoading] = useState('');
 
   const submitLogin = async e => {
+    // prevent from default form action
     e.preventDefault();
 
     setErrorMessage('');
     setLoading(true);
 
+    // add class to targeted form which validate fields
     e.target.className += ' was-validated';
 
+    // service signin
     const result = await signinService({
       email,
       password
     });
 
     setLoading(false);
+
+    // if message exists it means there was an error
     if (result.message) {
       setErrorMessage(result.message);
     } else {
@@ -49,26 +54,33 @@ const SignIn = props => {
     }
   };
 
+  // onClick if facebook response success gets callback with accessToken
   const responseFacebook = async response => {
+    // service that signin/up user in database
     const result = await authSocialService('facebook', response.accessToken);
 
     if (result.authorized) {
+      // login success
       setAuth(true);
       setUserData(result.user);
       props.history.push(result.path);
     } else {
+      // login fail
       setErrorMessage('Something went wrong');
     }
   };
 
+  // onClick if google response success gets callback with accessToken
   const responseGoogle = async response => {
     const result = await authSocialService('google', response.accessToken);
 
     if (result.authorized) {
+      // login success
       setAuth(true);
       setUserData(result.user);
       props.history.push(result.path);
     } else {
+      // login fail
       setErrorMessage('Something went wrong');
     }
   };
