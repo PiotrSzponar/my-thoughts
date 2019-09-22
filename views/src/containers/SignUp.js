@@ -40,7 +40,7 @@ const SignUp = props => {
     e.target.className += ' was-validated';
 
     if (password !== passwordConfirm) {
-      setErrorMessage('Fields are not valid');
+      setErrorMessage('Passwords do not match');
       setLoading(false);
       return;
     }
@@ -54,6 +54,10 @@ const SignUp = props => {
 
     if (result.error && result.error.statusCode === 500) {
       setMessage('User already exists');
+    }
+
+    if (result.status === 'success') {
+      setMessage(result.message);
     }
 
     setLoading(false);
