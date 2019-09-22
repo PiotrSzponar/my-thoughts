@@ -29,6 +29,8 @@ function App() {
 
       if (token) {
         setAuth(true);
+      } else {
+        setAuth(false);
       }
     })();
   }, []);
