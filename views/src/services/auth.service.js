@@ -4,6 +4,9 @@ export const authLocalService = async body => {
   try {
     const response = await fetch(`/api/users/signup`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(body)
     });
 
@@ -17,6 +20,9 @@ export const signinService = async body => {
   try {
     const response = await fetch(`/api/users/signin`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(body)
     });
     const { data, status, error } = await response.json();
@@ -52,6 +58,9 @@ export const authSocialService = async (type, token) => {
   try {
     const options = {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ access_token: token })
     };
 
@@ -93,7 +102,10 @@ export const authSocialService = async (type, token) => {
 export const verifyService = async id => {
   try {
     const response = await fetch(`/api/users/verification/${id}`, {
-      method: 'PATCH'
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     const { status, message } = await response.json();
 
@@ -109,6 +121,9 @@ export const ResetPasswordService = async (id, body) => {
   try {
     const response = await fetch(`/api/users/reset-password/${id}`, {
       method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(body)
     });
     const { status, message } = await response.json();
@@ -125,6 +140,9 @@ export const sendEmailToVerifyService = async body => {
   try {
     const response = await fetch(`/api/users/resend-verification`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(body)
     });
 
@@ -141,6 +159,9 @@ export const sendEmailToForgotPasswordService = async body => {
   try {
     const response = await fetch(`/api/users/forgot-password`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(body)
     });
 

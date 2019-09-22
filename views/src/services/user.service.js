@@ -3,7 +3,8 @@ export const completeUserService = async body => {
     const response = await fetch(`/api/users/signup/complete`, {
       method: 'PATCH',
       headers: {
-        'x-access-token': localStorage.getItem('token')
+        'x-access-token': localStorage.getItem('token'),
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     });
@@ -33,11 +34,13 @@ export const fetchUserService = async () => {
     const response = await fetch(`/api/users/me`, {
       method: 'GET',
       headers: {
-        'x-access-token': localStorage.getItem('token')
+        'x-access-token': localStorage.getItem('token'),
+        'Content-Type': 'application/json'
       }
     });
 
     const { status, data, error } = await response.json();
+
     if (status === 'fail') {
       return error.message;
     }
