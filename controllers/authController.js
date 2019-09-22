@@ -11,36 +11,6 @@ const signToken = (id, expiresTime = process.env.JWT_LOGIN_EXPIRES_IN) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: expiresTime });
 };
 
-// Create cookie with JWT token
-const createTokenCookie = (user, statusCode, res) => {
-  const token = signToken(user._id);
-  const cookieOptions = {
-    expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
-    ),
-    httpOnly: true
-  };
-
-  // If production is https:
-  // if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
-
-  res.cookie('jwt', token, cookieOptions);
-
-  // Remove password and isVerified from output
-  user.password = undefined;
-  user.isVerified = undefined;
-  user.isActive = undefined;
-
-  res.status(statusCode).json({
-    status: 'success',
-    token,
-    data: {
-      user
-    }
-  });
-};
-exports.createTokenCookie = createTokenCookie;
-
 // Check if user has required field
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {

@@ -25,13 +25,13 @@ passport.use(
             return done(null, user);
           }
 
-          const isUserWithOtherMthod = await User.findOne({
+          const isUserWithOtherMethod = await User.findOne({
             email: profile.emails[0].value
           });
 
           if (
-            isUserWithOtherMthod &&
-            isUserWithOtherMthod.method !== 'google'
+            isUserWithOtherMethod &&
+            isUserWithOtherMethod.method !== 'google'
           ) {
             return done(null, false, {
               message: 'User registered using other method'
@@ -79,13 +79,13 @@ passport.use(
             return done(null, user);
           }
 
-          const isUserWithOtherMthod = await User.findOne({
+          const isUserWithOtherMethod = await User.findOne({
             email: profile.emails[0].value
           });
 
           if (
-            isUserWithOtherMthod &&
-            isUserWithOtherMthod.method !== 'facebook'
+            isUserWithOtherMethod &&
+            isUserWithOtherMethod.method !== 'facebook'
           ) {
             return done(null, false, {
               message: 'User registered using other method'
