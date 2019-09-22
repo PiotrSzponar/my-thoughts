@@ -63,20 +63,8 @@ const SignUp = props => {
     setLoading(false);
   };
 
-  const responseFacebook = async response => {
-    const result = await authSocialService('facebook', response.accessToken);
-
-    if (result.authorized) {
-      setAuth(true);
-      setUserData(result.user);
-      props.history.push(result.path);
-    } else {
-      setMessage('Something went wrong');
-    }
-  };
-
-  const responseGoogle = async response => {
-    const result = await authSocialService('google', response.accessToken);
+  const handleSocialResponse = async (response, socialType) => {
+    const result = await authSocialService(socialType, response.accessToken);
 
     if (result.authorized) {
       setAuth(true);
@@ -161,8 +149,8 @@ const SignUp = props => {
                 or Sign in with:
               </p>
               <div className="row my-3 d-flex justify-content-center">
-                <ButtonFacebook responseFacebook={responseFacebook} />
-                <ButtonGoogle responseGoogle={responseGoogle} />
+                <ButtonFacebook onSocialResponse={handleSocialResponse} />
+                <ButtonGoogle onSocialResponse={handleSocialResponse} />
               </div>
             </MDBCardBody>
             <MDBModalFooter className="mx-5 pt-3 mb-1">

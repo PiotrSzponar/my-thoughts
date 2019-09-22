@@ -5,13 +5,13 @@ import { MDBBtn, MDBIcon } from 'mdbreact';
 
 import config from '../../config/config.json';
 
-const ButtonFacebook = ({ responseFacebook }) => {
+const ButtonFacebook = ({ onSocialResponse }) => {
   return (
     <FacebookLogin
       appId={config.FACEBOOK_APP_ID}
       autoLoad={false}
       fields="name,email,picture"
-      callback={responseFacebook}
+      callback={resp => onSocialResponse(resp, 'facebook')}
       render={renderProps => (
         <MDBBtn
           onClick={renderProps.onClick}

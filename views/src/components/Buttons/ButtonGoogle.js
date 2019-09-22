@@ -5,12 +5,12 @@ import { MDBBtn, MDBIcon } from 'mdbreact';
 
 import config from '../../config/config.json';
 
-const ButtonFacebook = ({ responseGoogle }) => {
+const ButtonFacebook = ({ onSocialResponse }) => {
   return (
     <GoogleLogin
       clientId={config.GOOGLE_CLIENT_ID}
-      onSuccess={responseGoogle}
-      onFailure={responseGoogle}
+      onSuccess={resp => onSocialResponse(resp, 'google')}
+      onFailure={resp => onSocialResponse(resp, 'google')}
       render={renderProps => (
         <MDBBtn
           onClick={renderProps.onClick}

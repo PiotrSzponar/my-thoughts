@@ -73,11 +73,12 @@ export const authSocialService = async (type, token) => {
     let result = {
       path: '/',
       authorized: false,
-      user: {}
+      user: {},
+      error: ''
     };
 
     if (status === 'fail') {
-      result.message = error.message;
+      result.error = error.message;
       return result;
     }
 
