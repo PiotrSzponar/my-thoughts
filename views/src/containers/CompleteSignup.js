@@ -61,7 +61,7 @@ const CompleteSignup = props => {
             <MDBCardBody className="mx-4">
               <div className="text-center">
                 <h5 className="dark-grey-text mb-6">
-                  <strong>Step 2</strong>
+                  <strong>Step 2 of 2</strong>
                 </h5>
                 <h3 className="dark-grey-text mb-5">
                   <strong>Complete Signup</strong>

@@ -23,7 +23,7 @@ const Verification = props => {
   return (
     <Jumbotron>
       <MDBCardTitle className="h1-responsive pt-3 m-5 font-bold">
-        Verficiation
+        Verificiation
       </MDBCardTitle>
       <p className="white-text mx-5 mb-5">{message}</p>
     </Jumbotron>

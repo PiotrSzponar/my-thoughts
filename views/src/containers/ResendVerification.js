@@ -25,7 +25,7 @@ const ResendVerification = () => {
   return (
     <Jumbotron>
       <MDBCardTitle className="h1-responsive pt-3 m-5 font-bold">
-        Verficiation
+        Verificiation
       </MDBCardTitle>
       <MDBCardBody className="mx-4">
         {!message ? (

@@ -1,8 +1,6 @@
-import { setSession } from './session.service';
 import config from '../config/config.json';
 
 const header = {
-  origin: config.API_URL,
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*'
 };
@@ -17,9 +15,7 @@ export const authLocalService = async body => {
       body: JSON.stringify(body)
     });
 
-    const data = await response.json();
-
-    return data;
+    return await response.json();
   } catch (error) {
     return error;
   }
@@ -52,7 +48,7 @@ export const signinService = async body => {
       result.path = '/complete-signup';
     }
 
-    await setSession({ auth: true, user: data.user, token: newtoken });
+    localStorage.setItem('token', newtoken);
     result.authorized = true;
     result.user = data.user;
     return result;
@@ -90,13 +86,14 @@ export const authSocialService = async (type, token) => {
     }
 
     if (token) {
-      await setSession({ auth: true, user: data.user, token: newtoken });
+      localStorage.setItem('token', newtoken);
       result.authorized = true;
       result.user = data.user;
 
       if (data.user && !data.user.isCompleted) {
         result.path = '/complete-signup';
       }
+
       return result;
     }
 

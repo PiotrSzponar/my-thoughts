@@ -6,31 +6,29 @@ import MyContext from './hooks/myContext';
 import './App.css';
 import PrivateRoute from './Router/PrivateRoute';
 import Navigation from './components/Navigation';
-import SignIn from './auth/SignIn';
-import SignUp from './auth/SignUp';
-import CompleteSignup from './auth/CompleteSignup';
-import Verification from './auth/Verification';
-import ResendVerification from './auth/ResendVerification';
-import ForgotPassword from './auth/ForgotPassword';
-import ResetPassword from './auth/ResetPassword';
+import SignIn from './containers/SignIn';
+import SignUp from './containers/SignUp';
+import CompleteSignup from './containers/CompleteSignup';
+import Verification from './containers/Verification';
+import ResendVerification from './containers/ResendVerification';
+import ForgotPassword from './containers/ForgotPassword';
+import ResetPassword from './containers/ResetPassword';
 
-import { getSession } from './services/session.service';
-
-import Dashboard from './pages/dashboard';
-import Posts from './pages/posts';
-import UserProfile from './pages/userProfile';
-import NotFound from './pages/notFound';
+import Dashboard from './containers/dashboard';
+import Posts from './containers/posts';
+import UserProfile from './containers/userProfile';
+import NotFound from './containers/notFound';
 
 function App() {
   const [isLoggedIn, setAuth] = useState(false);
   const [userData, setUserData] = useState({});
 
   useEffect(() => {
-    (async () => {
-      const authorized = await getSession('auth', 'user');
-      if (authorized[0]) {
+    (() => {
+      const token = localStorage.getItem('token');
+
+      if (token) {
         setAuth(true);
-        setUserData(authorized[1]);
       }
     })();
   }, []);

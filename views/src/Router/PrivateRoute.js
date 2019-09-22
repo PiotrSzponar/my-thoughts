@@ -1,17 +1,15 @@
 import React from 'react';
 import { Route, Redirect } from 'react-router-dom';
 
-import { getSession } from '../services/session.service';
-
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const authorized = getSession('auth', 'user');
+  const token = localStorage.getItem('token');
 
   return (
     <Route
       {...rest}
       render={props =>
-        authorized[0] ? (
-          <Component {...props} user={authorized[1]} />
+        token ? (
+          <Component {...props} />
         ) : (
           <Redirect
             to={{

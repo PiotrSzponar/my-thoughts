@@ -1,5 +1,4 @@
 import config from '../config/config.json';
-import { getSession, setSession } from './session.service';
 
 export const completeUserService = async body => {
   try {
@@ -9,7 +8,7 @@ export const completeUserService = async body => {
         origin: config.API_URL,
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'x-access-token': getSession('token')
+        'x-access-token': localStorage.getItem('token')
       },
       body: JSON.stringify(body)
     });
@@ -26,7 +25,7 @@ export const completeUserService = async body => {
       result.message = error.message;
       return result;
     }
-    await setSession({ user: data.user });
+
     result.user = data.user;
     return result;
   } catch (error) {
@@ -42,7 +41,7 @@ export const fetchUserService = async () => {
         origin: config.API_URL,
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'x-access-token': getSession('token')
+        'x-access-token': localStorage.getItem('token')
       }
     });
 

@@ -1,7 +1,5 @@
 import React, { useState, useContext } from 'react';
 
-import { clearSession } from '../services/session.service';
-
 import MyContext from '../hooks/myContext';
 
 import {
@@ -23,8 +21,8 @@ const Navigation = ({ user }) => {
     toggleIsOpen(!isOpen);
   };
 
-  const onLogout = async () => {
-    await clearSession('auth', 'user', 'token');
+  const onLogout = () => {
+    localStorage.clear('token');
     toggleIsOpen(!isOpen);
     setAuth(false);
     setUserData({});

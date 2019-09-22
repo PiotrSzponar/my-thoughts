@@ -60,12 +60,10 @@ const SignIn = props => {
     const result = await authSocialService('facebook', response.accessToken);
 
     if (result.authorized) {
-      // login success
       setAuth(true);
       setUserData(result.user);
       props.history.push(result.path);
     } else {
-      // login fail
       setErrorMessage('Something went wrong');
     }
   };
@@ -75,12 +73,10 @@ const SignIn = props => {
     const result = await authSocialService('google', response.accessToken);
 
     if (result.authorized) {
-      // login success
       setAuth(true);
       setUserData(result.user);
       props.history.push(result.path);
     } else {
-      // login fail
       setErrorMessage('Something went wrong');
     }
   };
