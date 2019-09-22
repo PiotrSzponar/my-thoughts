@@ -1,17 +1,9 @@
-import config from '../config/config.json';
-
-const header = {
-  'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*'
-};
-
 //TODO: add check if token is expired
 
 export const authLocalService = async body => {
   try {
-    const response = await fetch(`${config.API_URL}api/users/signup`, {
+    const response = await fetch(`/api/users/signup`, {
       method: 'POST',
-      headers: header,
       body: JSON.stringify(body)
     });
 
@@ -23,9 +15,8 @@ export const authLocalService = async body => {
 
 export const signinService = async body => {
   try {
-    const response = await fetch(`${config.API_URL}api/users/signin`, {
+    const response = await fetch(`/api/users/signin`, {
       method: 'POST',
-      headers: header,
       body: JSON.stringify(body)
     });
     const { data, status, error } = await response.json();
@@ -61,14 +52,10 @@ export const authSocialService = async (type, token) => {
   try {
     const options = {
       method: 'POST',
-      headers: header,
       body: JSON.stringify({ access_token: token })
     };
 
-    const response = await fetch(
-      `${config.API_URL}api/users/signup/${type}`,
-      options
-    );
+    const response = await fetch(`/api/users/signup/${type}`, options);
 
     const newtoken = await response.headers.get('x-auth-token');
 
@@ -105,13 +92,9 @@ export const authSocialService = async (type, token) => {
 
 export const verifyService = async id => {
   try {
-    const response = await fetch(
-      `${config.API_URL}api/users/verification/${id}`,
-      {
-        method: 'PATCH',
-        headers: header
-      }
-    );
+    const response = await fetch(`/api/users/verification/${id}`, {
+      method: 'PATCH'
+    });
     const { status, message } = await response.json();
 
     if (status !== 'ok') throw new Error(message);
@@ -124,14 +107,10 @@ export const verifyService = async id => {
 
 export const ResetPasswordService = async (id, body) => {
   try {
-    const response = await fetch(
-      `${config.API_URL}api/users/reset-password/${id}`,
-      {
-        method: 'PATCH',
-        headers: header,
-        body: JSON.stringify(body)
-      }
-    );
+    const response = await fetch(`/api/users/reset-password/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(body)
+    });
     const { status, message } = await response.json();
 
     if (status !== 'ok') throw new Error(message);
@@ -144,14 +123,10 @@ export const ResetPasswordService = async (id, body) => {
 
 export const sendEmailToVerifyService = async body => {
   try {
-    const response = await fetch(
-      `${config.API_URL}api/users/resend-verification`,
-      {
-        method: 'POST',
-        headers: header,
-        body: JSON.stringify(body)
-      }
-    );
+    const response = await fetch(`/api/users/resend-verification`, {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
 
     const { status, message } = await response.json();
     if (status !== 'ok') throw new Error(message);
@@ -164,9 +139,8 @@ export const sendEmailToVerifyService = async body => {
 
 export const sendEmailToForgotPasswordService = async body => {
   try {
-    const response = await fetch(`${config.API_URL}api/users/forgot-password`, {
+    const response = await fetch(`/api/users/forgot-password`, {
       method: 'POST',
-      headers: header,
       body: JSON.stringify(body)
     });
 

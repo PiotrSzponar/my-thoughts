@@ -6,7 +6,6 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xssClean = require('xss-clean');
 const hpp = require('hpp');
-const cors = require('cors');
 
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
@@ -21,15 +20,6 @@ const friendRouter = require('./routes/friendRoutes');
 const passportSetup = require('./utils/initPassport');
 
 const app = express();
-
-const corsOption = {
-  origin: true,
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-  exposedHeaders: ['x-auth-token']
-};
-
-app.use(cors(corsOption));
 
 // GLOBAL MIDDLEWARES
 

@@ -1,13 +1,8 @@
-import config from '../config/config.json';
-
 export const completeUserService = async body => {
   try {
-    const response = await fetch(`${config.API_URL}api/users/signup/complete`, {
+    const response = await fetch(`/api/users/signup/complete`, {
       method: 'PATCH',
       headers: {
-        origin: config.API_URL,
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
         'x-access-token': localStorage.getItem('token')
       },
       body: JSON.stringify(body)
@@ -35,12 +30,9 @@ export const completeUserService = async body => {
 
 export const fetchUserService = async () => {
   try {
-    const response = await fetch(`${config.API_URL}api/users/me`, {
+    const response = await fetch(`/api/users/me`, {
       method: 'GET',
       headers: {
-        origin: config.API_URL,
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
         'x-access-token': localStorage.getItem('token')
       }
     });
