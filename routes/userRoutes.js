@@ -87,6 +87,7 @@ router.patch(
 
 router.get('/:id', userController.getUser);
 
+router.get('/', userController.getAllUsers);
 // After this MW - only for Admin
 router.use(authController.restrictTo('admin'));
 
